@@ -9,6 +9,7 @@ import { NavLinks } from "@/components/navbar/NavLinks";
 import { MobileMenu } from "@/components/navbar/MobileMenu";
 
 const navItems = [
+  { href: "/", label: "Home" },
   { href: "/features", label: "Features" },
   { href: "/solutions", label: "Solutions" },
   { href: "/about", label: "About" },
