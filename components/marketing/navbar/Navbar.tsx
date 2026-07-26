@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
-import { motion } from "framer-motion";
+import { Menu, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
   { label: "Features", href: "#features" },
@@ -14,53 +15,142 @@ const navItems = [
 ];
 
 export default function Navbar() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
-    <motion.header
-      initial={{ y: -30, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      className="fixed top-0 z-50 w-full"
-    >
-      <div className="mx-auto mt-5 flex max-w-7xl items-center justify-between rounded-2xl border bg-white/80 px-6 py-4 shadow-lg backdrop-blur-xl">
-        <Link href="/" className="flex items-center gap-3">
-          <Image
-            src="/images/Jafferi Clinic.png"
-            alt="Jafferi Clinic"
-            width={42}
-            height={42}
-          />
+    <>
+      <motion.header
+        initial={{ y: -30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="fixed top-0 z-50 w-full"
+      >
+        <div className="mx-auto mt-4 flex max-w-7xl items-center justify-between rounded-2xl border bg-white/80 px-4 py-3 shadow-lg backdrop-blur-xl sm:mt-5 sm:px-6 sm:py-4">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3">
+            <Image
+              src="/images/Jafferi Clinic.png"
+              alt="Jafferi Clinic"
+              width={36}
+              height={36}
+              className="sm:h-[42px] sm:w-[42px]"
+            />
 
-          <div>
-            <h2 className="font-bold text-lg">Jafferi Clinic</h2>
-            <p className="text-xs text-muted-foreground">
-              Clinic Management
-            </p>
+            <div className="hidden sm:block">
+              <h2 className="font-bold text-base sm:text-lg">Jafferi Clinic</h2>
+              <p className="text-[10px] text-muted-foreground sm:text-xs">
+                Clinic Management
+              </p>
+            </div>
+          </Link>
+
+          <nav className="hidden items-center gap-6 lg:gap-8 md:flex">
+            {navItems.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="whitespace-nowrap text-sm font-medium transition hover:text-emerald-600"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="hidden items-center gap-2 sm:gap-3 md:flex">
+            <Button variant="ghost" className="text-sm sm:text-base">
+              Login
+            </Button>
+
+            <Button className="rounded-full bg-emerald-600 px-4 text-sm hover:bg-emerald-700 sm:px-6 sm:text-base">
+              Book Demo
+            </Button>
           </div>
-        </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
-          {navItems.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="text-sm font-medium transition hover:text-emerald-600"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="hidden gap-3 md:flex">
-          <Button variant="ghost">Login</Button>
-
-          <Button className="rounded-full bg-emerald-600 hover:bg-emerald-700">
-            Book Demo
-          </Button>
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="rounded-lg border p-2 md:hidden"
+          >
+            <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
+          </button>
         </div>
+      </motion.header>
 
-        <button className="md:hidden">
-          <Menu />
-        </button>
-      </div>
-    </motion.header>
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="absolute right-0 top-0 h-full w-[85%] max-w-sm bg-white shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b p-4 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Image
+                    src="/images/Jafferi Clinic.png"
+                    alt="Jafferi Clinic"
+                    width={36}
+                    height={36}
+                    className="sm:h-[42px] sm:w-[42px]"
+                  />
+                  <div>
+                    <h3 className="font-bold text-base sm:text-lg">
+                      Jafferi Clinic
+                    </h3>
+                    <p className="text-[10px] text-muted-foreground sm:text-xs">
+                      Clinic Management
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg border p-2"
+                >
+                  <X className="h-5 w-5 sm:h-6 sm:w-6" />
+                </button>
+              </div>
+
+              <nav className="flex flex-col gap-6 p-6">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-lg font-medium text-slate-700 transition hover:text-emerald-600 sm:text-xl"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+
+                <div className="mt-6 space-y-3">
+                  <Button
+                    variant="outline"
+                    className="w-full rounded-full"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Login
+                  </Button>
+
+                  <Button
+                    className="w-full rounded-full bg-emerald-600 hover:bg-emerald-700"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Book Demo
+                  </Button>
+                </div>
+              </nav>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

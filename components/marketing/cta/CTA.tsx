@@ -10,42 +10,42 @@ import {
 
 export default function CTA() {
   return (
-    <section className="relative overflow-hidden py-32">
+    <section className="relative overflow-hidden py-20 sm:py-24 md:py-32">
       {/* Background */}
 
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 via-green-600 to-emerald-700" />
 
-      <div className="absolute -left-32 top-0 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
+      <div className="absolute -left-16 top-0 h-64 w-64 rounded-full bg-white/10 blur-3xl sm:-left-32 sm:h-96 sm:w-96" />
 
-      <div className="absolute -right-32 bottom-0 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
+      <div className="absolute -right-16 bottom-0 h-64 w-64 rounded-full bg-white/10 blur-3xl sm:-right-32 sm:h-96 sm:w-96" />
 
-      <div className="container relative mx-auto max-w-7xl px-6">
+      <div className="container relative mx-auto max-w-7xl px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mx-auto max-w-4xl rounded-[40px] border border-white/20 bg-white/10 p-14 text-center backdrop-blur-xl"
+          className="mx-auto max-w-4xl rounded-[32px] border border-white/20 bg-white/10 p-8 text-center backdrop-blur-xl sm:rounded-[40px] sm:p-14"
         >
-          <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-medium text-white">
-            🚀 Start Growing Your Clinic Today
+          <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-medium text-white sm:px-5 sm:py-2 sm:text-sm">
+            ?? Start Growing Your Clinic Today
           </span>
 
-          <h2 className="mt-8 text-5xl font-black leading-tight text-white lg:text-6xl">
+          <h2 className="mt-6 text-3xl font-black leading-tight text-white sm:mt-8 sm:text-4xl lg:text-5xl lg:text-6xl">
             Ready to Modernize
             <br />
             Your Clinic?
           </h2>
 
-          <p className="mx-auto mt-8 max-w-2xl text-xl leading-8 text-white/80">
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-white/80 sm:mt-8 sm:text-xl sm:leading-8">
             Join modern healthcare providers using Jafferi Clinic to
             manage appointments, patients, billing and analytics from
             one powerful platform.
           </p>
 
-          <div className="mt-12 flex flex-col justify-center gap-5 sm:flex-row">
+          <div className="mt-8 flex flex-col justify-center gap-4 sm:mt-12 sm:flex-row sm:gap-5">
             <Button
               size="lg"
-              className="rounded-full bg-white px-8 text-emerald-700 hover:bg-white"
+              className="rounded-full bg-white px-6 text-emerald-700 hover:bg-white sm:px-8"
             >
               <Calendar className="mr-2 h-5 w-5" />
               Book Free Demo
@@ -55,18 +55,18 @@ export default function CTA() {
             <Button
               size="lg"
               variant="outline"
-              className="rounded-full border-white bg-transparent px-8 text-white hover:bg-white/10"
+              className="rounded-full border-white bg-transparent px-6 text-white hover:bg-white/10 sm:px-8"
             >
               <Play className="mr-2 h-5 w-5" />
               Watch Demo
             </Button>
           </div>
 
-          <div className="mt-12 flex flex-wrap justify-center gap-10 text-white/80">
-            <div>✓ Free Setup</div>
-            <div>✓ Secure Cloud</div>
-            <div>✓ 24/7 Support</div>
-            <div>✓ No Credit Card</div>
+          <div className="mt-8 flex flex-wrap justify-center gap-6 text-white/80 sm:mt-12 sm:gap-10">
+            <div className="text-sm sm:text-base">? Free Setup</div>
+            <div className="text-sm sm:text-base">? Secure Cloud</div>
+            <div className="text-sm sm:text-base">? 24/7 Support</div>
+            <div className="text-sm sm:text-base">? No Credit Card</div>
           </div>
         </motion.div>
       </div>

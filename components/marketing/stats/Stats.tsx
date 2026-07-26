@@ -23,9 +23,9 @@ const stats = [
 
 export default function Stats() {
   return (
-    <section className="bg-gradient-to-r from-emerald-600 to-green-700 py-24 text-white">
-      <div className="container mx-auto max-w-7xl px-6">
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+    <section className="bg-gradient-to-r from-emerald-600 to-green-700 py-16 text-white sm:py-20 md:py-24">
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -33,13 +33,13 @@ export default function Stats() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.08 }}
               viewport={{ once: true }}
-              className="rounded-3xl bg-white/10 p-8 backdrop-blur-md"
+              className="rounded-2xl bg-white/10 p-6 backdrop-blur-md sm:rounded-3xl sm:p-8"
             >
-              <h2 className="text-5xl font-black">
+              <h2 className="text-4xl font-black sm:text-5xl">
                 {stat.value}
               </h2>
 
-              <p className="mt-4 text-lg text-white/80">
+              <p className="mt-3 text-base text-white/80 sm:mt-4 sm:text-lg">
                 {stat.label}
               </p>
             </motion.div>

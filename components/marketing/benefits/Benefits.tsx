@@ -37,27 +37,27 @@ const benefits = [
 
 export default function Benefits() {
   return (
-    <section className="py-28 bg-white">
-      <div className="container mx-auto max-w-7xl px-6">
-        <div className="grid gap-16 lg:grid-cols-2 items-center">
+    <section className="py-20 bg-white sm:py-24 md:py-28">
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
           <div>
-            <span className="rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700">
+            <span className="inline-block rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700 sm:px-4 sm:py-2 sm:text-sm">
               Why Choose Jafferi Clinic
             </span>
 
-            <h2 className="mt-6 text-4xl lg:text-5xl font-bold leading-tight">
+            <h2 className="mt-6 text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
               Built to Help Clinics
               <span className="text-emerald-600"> Work Smarter</span>
             </h2>
 
-            <p className="mt-6 text-lg text-muted-foreground leading-8">
+            <p className="mt-6 text-base text-muted-foreground leading-7 sm:text-lg sm:leading-8">
               Jafferi Clinic streamlines every part of your clinic—from patient
               registration and appointments to billing and analytics—allowing
               your staff to focus on delivering exceptional healthcare.
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid gap-4 sm:gap-6 sm:grid-cols-2">
             {benefits.map((item, index) => {
               const Icon = item.icon;
 
@@ -69,17 +69,17 @@ export default function Benefits() {
                   transition={{ delay: index * 0.1 }}
                   viewport={{ once: true }}
                   whileHover={{ y: -8 }}
-                  className="rounded-3xl border bg-white p-8 shadow-lg transition-all hover:shadow-2xl"
+                  className="rounded-2xl border bg-white p-6 shadow-lg transition-all hover:shadow-2xl sm:rounded-3xl sm:p-8"
                 >
-                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 text-white">
-                    <Icon size={28} />
+                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 text-white sm:mb-6 sm:h-14 sm:w-14 sm:rounded-2xl">
+                    <Icon size={24} className="sm:size-[28px]" />
                   </div>
 
-                  <h3 className="text-xl font-bold">
+                  <h3 className="text-lg font-bold sm:text-xl">
                     {item.title}
                   </h3>
 
-                  <p className="mt-4 text-muted-foreground leading-7">
+                  <p className="mt-3 text-muted-foreground leading-6 sm:mt-4 sm:leading-7">
                     {item.description}
                   </p>
                 </motion.div>

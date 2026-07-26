@@ -45,19 +45,19 @@ const plans = [
 
 export default function Pricing() {
   return (
-    <section id="pricing" className="py-28 bg-white">
-      <div className="container mx-auto max-w-7xl px-6">
+    <section id="pricing" className="py-20 bg-white sm:py-24 md:py-28">
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6">
         <div className="text-center">
-          <span className="rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700">
+          <span className="inline-block rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700 sm:px-4 sm:py-2 sm:text-sm">
             Pricing
           </span>
 
-          <h2 className="mt-6 text-5xl font-bold">
+          <h2 className="mt-6 text-3xl font-bold sm:text-4xl lg:text-5xl">
             Simple & Transparent Pricing
           </h2>
         </div>
 
-        <div className="mt-20 grid gap-8 lg:grid-cols-3">
+        <div className="mt-12 grid gap-6 sm:mt-16 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
@@ -65,38 +65,38 @@ export default function Pricing() {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className={`rounded-3xl border p-10 shadow-lg ${
+              className={`rounded-2xl border p-6 shadow-lg sm:rounded-3xl sm:p-10 ${
                 plan.popular
                   ? "border-emerald-500 ring-2 ring-emerald-500"
                   : ""
               }`}
             >
               {plan.popular && (
-                <div className="mb-6 inline-block rounded-full bg-emerald-600 px-4 py-2 text-sm text-white">
+                <div className="mb-4 inline-block rounded-full bg-emerald-600 px-3 py-1.5 text-xs text-white sm:mb-6 sm:px-4 sm:py-2 sm:text-sm">
                   Most Popular
                 </div>
               )}
 
-              <h3 className="text-2xl font-bold">{plan.name}</h3>
+              <h3 className="text-xl font-bold sm:text-2xl">{plan.name}</h3>
 
-              <div className="mt-6 text-5xl font-black">
+              <div className="mt-4 text-4xl font-black sm:mt-6 sm:text-5xl">
                 {plan.price}
               </div>
 
-              <p className="mt-3 text-muted-foreground">
+              <p className="mt-2 text-muted-foreground sm:mt-3">
                 {plan.description}
               </p>
 
-              <div className="my-8 space-y-4">
+              <div className="my-6 space-y-3 sm:my-8 sm:space-y-4">
                 {plan.features.map((feature) => (
                   <div key={feature} className="flex items-center gap-3">
-                    <Check size={18} className="text-emerald-600" />
-                    {feature}
+                    <Check size={16} className="text-emerald-600 sm:size-[18px]" />
+                    <span className="text-sm sm:text-base">{feature}</span>
                   </div>
                 ))}
               </div>
 
-              <Button className="w-full rounded-full">
+              <Button className="w-full rounded-full text-sm sm:text-base">
                 Get Started
               </Button>
             </motion.div>

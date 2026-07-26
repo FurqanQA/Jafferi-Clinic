@@ -35,53 +35,54 @@ const resources = [
 export default function Footer() {
   return (
     <footer className="border-t bg-white">
-      <div className="container mx-auto max-w-7xl px-6 py-20">
-        <div className="grid gap-14 lg:grid-cols-5">
+      <div className="container mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-20">
+        <div className="grid gap-10 sm:gap-12 lg:gap-14 lg:grid-cols-5">
           {/* Company */}
 
           <div className="lg:col-span-2">
             <Link
               href="/"
-              className="flex items-center gap-3"
+              className="flex items-center gap-2 sm:gap-3"
             >
               <Image
                 src="/images/Jafferi Clinic.png"
                 alt="Jafferi Clinic"
-                width={50}
-                height={50}
+                width={40}
+                height={40}
+                className="sm:h-[50px] sm:w-[50px]"
               />
 
               <div>
-                <h3 className="text-2xl font-bold">
+                <h3 className="text-xl font-bold sm:text-2xl">
                   Jafferi Clinic
                 </h3>
 
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground sm:text-sm">
                   AI Clinic Management Software
                 </p>
               </div>
             </Link>
 
-            <p className="mt-8 max-w-md leading-8 text-muted-foreground">
+            <p className="mt-6 max-w-md leading-7 text-muted-foreground sm:mt-8 sm:leading-8">
               Modern clinic management software designed to simplify
               appointments, patient records, billing and analytics for
               healthcare professionals worldwide.
             </p>
 
-            <div className="mt-8 space-y-4 text-muted-foreground">
-              <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-emerald-600" />
-                hello@jaffericlinic.com
+            <div className="mt-6 space-y-3 text-muted-foreground sm:mt-8 sm:space-y-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Mail className="h-4 w-4 text-emerald-600 sm:h-5 sm:w-5" />
+                <span className="text-sm sm:text-base">hello@jaffericlinic.com</span>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-emerald-600" />
-                +92 300 1234567
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Phone className="h-4 w-4 text-emerald-600 sm:h-5 sm:w-5" />
+                <span className="text-sm sm:text-base">+92 300 1234567</span>
               </div>
 
-              <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-emerald-600" />
-                Karachi, Pakistan
+              <div className="flex items-center gap-2 sm:gap-3">
+                <MapPin className="h-4 w-4 text-emerald-600 sm:h-5 sm:w-5" />
+                <span className="text-sm sm:text-base">Karachi, Pakistan</span>
               </div>
             </div>
           </div>
@@ -89,16 +90,16 @@ export default function Footer() {
           {/* Links */}
 
           <div>
-            <h4 className="mb-6 font-bold">
+            <h4 className="mb-4 font-bold sm:mb-6">
               Company
             </h4>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {company.map((item) => (
                 <Link
                   key={item}
                   href="/"
-                  className="block text-muted-foreground transition hover:text-emerald-600"
+                  className="block text-muted-foreground transition hover:text-emerald-600 text-sm sm:text-base"
                 >
                   {item}
                 </Link>
@@ -107,16 +108,16 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-6 font-bold">
+            <h4 className="mb-4 font-bold sm:mb-6">
               Product
             </h4>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {product.map((item) => (
                 <Link
                   key={item}
                   href="/"
-                  className="block text-muted-foreground transition hover:text-emerald-600"
+                  className="block text-muted-foreground transition hover:text-emerald-600 text-sm sm:text-base"
                 >
                   {item}
                 </Link>
@@ -125,16 +126,16 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-6 font-bold">
+            <h4 className="mb-4 font-bold sm:mb-6">
               Resources
             </h4>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {resources.map((item) => (
                 <Link
                   key={item}
                   href="/"
-                  className="block text-muted-foreground transition hover:text-emerald-600"
+                  className="block text-muted-foreground transition hover:text-emerald-600 text-sm sm:text-base"
                 >
                   {item}
                 </Link>
@@ -145,27 +146,27 @@ export default function Footer() {
 
         {/* Bottom */}
 
-        <div className="mt-16 flex flex-col items-center justify-between gap-6 border-t pt-10 lg:flex-row">
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Jafferi Clinic. All rights
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t pt-8 sm:mt-12 sm:gap-6 lg:flex-row lg:mt-16 lg:pt-10">
+          <p className="text-center text-sm text-muted-foreground sm:text-base">
+            {new Date().getFullYear()} Jafferi Clinic. All rights
             reserved.
           </p>
 
-          <div className="flex gap-5">
-            <Link href="/">
-              <FaFacebook className="h-5 w-5 transition hover:text-emerald-600" />
+          <div className="flex gap-4 sm:gap-5">
+            <Link href="/" aria-label="Facebook">
+              <FaFacebook className="h-4 w-4 transition hover:text-emerald-600 sm:h-5 sm:w-5" />
             </Link>
 
-            <Link href="/">
-              <FaXTwitter className="h-5 w-5 transition hover:text-emerald-600" />
+            <Link href="/" aria-label="Twitter">
+              <FaXTwitter className="h-4 w-4 transition hover:text-emerald-600 sm:h-5 sm:w-5" />
             </Link>
 
-            <Link href="/">
-              <FaInstagram className="h-5 w-5 transition hover:text-emerald-600" />
+            <Link href="/" aria-label="Instagram">
+              <FaInstagram className="h-4 w-4 transition hover:text-emerald-600 sm:h-5 sm:w-5" />
             </Link>
 
-            <Link href="/">
-              <FaLinkedin className="h-5 w-5 transition hover:text-emerald-600" />
+            <Link href="/" aria-label="LinkedIn">
+              <FaLinkedin className="h-4 w-4 transition hover:text-emerald-600 sm:h-5 sm:w-5" />
             </Link>
           </div>
         </div>

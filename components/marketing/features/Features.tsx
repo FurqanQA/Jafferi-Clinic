@@ -53,25 +53,25 @@ export default function Features() {
   return (
     <section
       id="features"
-      className="py-28 bg-gradient-to-b from-white to-emerald-50/30"
+      className="py-20 bg-gradient-to-b from-white to-emerald-50/30 sm:py-24 md:py-28"
     >
-      <div className="container mx-auto max-w-7xl px-6">
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700">
+          <span className="inline-block rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700 sm:px-4 sm:py-2 sm:text-sm">
             Powerful Features
           </span>
 
-          <h2 className="mt-6 text-4xl font-bold lg:text-5xl">
+          <h2 className="mt-6 text-3xl font-bold sm:text-4xl lg:text-5xl">
             Everything Your Clinic Needs
           </h2>
 
-          <p className="mt-6 text-lg text-muted-foreground">
+          <p className="mt-6 text-base text-muted-foreground sm:text-lg">
             From appointment scheduling to billing and analytics,
             Jafferi Clinic helps you run your entire practice from one platform.
           </p>
         </div>
 
-        <div className="mt-20 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-6 sm:mt-16 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, index) => {
             const Icon = feature.icon;
 
@@ -85,17 +85,17 @@ export default function Features() {
                 whileHover={{
                   y: -10,
                 }}
-                className="group rounded-3xl border bg-white p-8 shadow-sm transition-all hover:shadow-2xl"
+                className="group rounded-2xl border bg-white p-6 shadow-sm transition-all hover:shadow-2xl sm:rounded-3xl sm:p-8"
               >
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg">
-                  <Icon size={30} />
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg sm:h-16 sm:w-16 sm:rounded-2xl">
+                  <Icon size={24} className="sm:size-[30px]" />
                 </div>
 
-                <h3 className="mt-8 text-2xl font-bold">
+                <h3 className="mt-6 text-xl font-bold sm:mt-8 sm:text-2xl">
                   {feature.title}
                 </h3>
 
-                <p className="mt-4 leading-7 text-muted-foreground">
+                <p className="mt-4 leading-7 text-muted-foreground sm:mt-4">
                   {feature.description}
                 </p>
               </motion.div>
