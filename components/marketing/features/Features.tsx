@@ -53,52 +53,54 @@ export default function Features() {
   return (
     <section
       id="features"
-      className="py-20 bg-gradient-to-b from-white to-emerald-50/30 sm:py-24 md:py-28"
+      aria-labelledby="features-heading"
+      className="py-16 bg-gradient-to-b from-white to-emerald-50/40 sm:py-20 md:py-24 lg:py-28 xl:py-32"
     >
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-block rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700 sm:px-4 sm:py-2 sm:text-sm">
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl px-2 text-center sm:px-0">
+          <span className="badge-premium">
             Powerful Features
           </span>
 
-          <h2 className="mt-6 text-3xl font-bold sm:text-4xl lg:text-5xl">
+          <h2 id="features-heading" className="mt-6 text-3xl font-bold sm:mt-8 sm:text-4xl lg:text-5xl">
             Everything Your Clinic Needs
           </h2>
 
-          <p className="mt-6 text-base text-muted-foreground sm:text-lg">
+          <p className="mt-4 text-base text-muted-foreground sm:mt-6 sm:text-lg sm:leading-relaxed">
             From appointment scheduling to billing and analytics,
             Jafferi Clinic helps you run your entire practice from one platform.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-6 sm:mt-16 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-5 sm:mt-16 sm:gap-6 md:grid-cols-2 lg:mt-20 lg:gap-8 xl:grid-cols-3">
           {features.map((feature, index) => {
             const Icon = feature.icon;
 
             return (
-              <motion.div
+              <motion.article
                 key={feature.title}
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08 }}
-                viewport={{ once: true }}
+                transition={{ duration: 0.5, ease: "easeOut", delay: index * 0.1 }}
+                viewport={{ once: true, margin: "-100px" }}
                 whileHover={{
-                  y: -10,
+                  y: -8,
+                  scale: 1.02,
                 }}
-                className="group rounded-2xl border bg-white p-6 shadow-sm transition-all hover:shadow-2xl sm:rounded-3xl sm:p-8"
+                className="group rounded-2xl border border-border/50 bg-white p-5 shadow-sm transition-all duration-300 ease-out hover:shadow-xl hover:-translate-y-1 hover:border-border/80 sm:rounded-3xl sm:p-8"
               >
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg sm:h-16 sm:w-16 sm:rounded-2xl">
-                  <Icon size={24} className="sm:size-[30px]" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/90 to-green-600/90 text-white shadow-md sm:h-14 sm:w-14 sm:rounded-2xl" aria-hidden="true">
+                  <Icon size={20} className="sm:size-[24px]" />
                 </div>
 
-                <h3 className="mt-6 text-xl font-bold sm:mt-8 sm:text-2xl">
+                <h3 className="mt-5 text-lg font-bold sm:mt-6 sm:text-xl lg:text-2xl leading-tight">
                   {feature.title}
                 </h3>
 
-                <p className="mt-4 leading-7 text-muted-foreground sm:mt-4">
+                <p className="mt-3 text-sm leading-6 text-muted-foreground sm:mt-4 sm:leading-7">
                   {feature.description}
                 </p>
-              </motion.div>
+              </motion.article>
             );
           })}
         </div>

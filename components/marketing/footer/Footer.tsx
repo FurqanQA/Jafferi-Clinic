@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { memo } from "react";
 
 import { Mail, Phone, MapPin } from "lucide-react";
 import {
@@ -32,28 +33,30 @@ const resources = [
   "Terms",
 ];
 
-export default function Footer() {
+function Footer() {
   return (
-    <footer className="border-t bg-white">
-      <div className="container mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 md:py-20">
-        <div className="grid gap-10 sm:gap-12 lg:gap-14 lg:grid-cols-5">
+    <footer role="contentinfo" className="border-t bg-white">
+      <div className="container mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 md:py-16 lg:py-20">
+        <div className="grid gap-8 sm:gap-10 lg:gap-12 lg:grid-cols-5">
           {/* Company */}
 
           <div className="lg:col-span-2">
             <Link
               href="/"
               className="flex items-center gap-2 sm:gap-3"
+              aria-label="Jafferi Clinic home"
             >
               <Image
                 src="/images/Jafferi Clinic.png"
                 alt="Jafferi Clinic"
-                width={40}
-                height={40}
-                className="sm:h-[50px] sm:w-[50px]"
+                width={36}
+                height={36}
+                loading="lazy"
+                className="h-9 w-9 sm:h-[50px] sm:w-[50px]"
               />
 
               <div>
-                <h3 className="text-xl font-bold sm:text-2xl">
+                <h3 className="text-lg font-bold sm:text-xl lg:text-2xl">
                   Jafferi Clinic
                 </h3>
 
@@ -63,114 +66,125 @@ export default function Footer() {
               </div>
             </Link>
 
-            <p className="mt-6 max-w-md leading-7 text-muted-foreground sm:mt-8 sm:leading-8">
+            <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground sm:mt-6 sm:leading-7 sm:text-base">
               Modern clinic management software designed to simplify
               appointments, patient records, billing and analytics for
               healthcare professionals worldwide.
             </p>
 
-            <div className="mt-6 space-y-3 text-muted-foreground sm:mt-8 sm:space-y-4">
+            <div className="mt-4 space-y-3 text-muted-foreground sm:mt-6 sm:space-y-4">
               <div className="flex items-center gap-2 sm:gap-3">
-                <Mail className="h-4 w-4 text-emerald-600 sm:h-5 sm:w-5" />
-                <span className="text-sm sm:text-base">hello@jaffericlinic.com</span>
+                <Mail className="h-4 w-4 text-emerald-600 sm:h-5 sm:w-5" aria-hidden="true" />
+                <span className="text-xs sm:text-sm sm:text-base">
+                  <a href="mailto:hello@jaffericlinic.com" className="hover:text-emerald-600 transition">hello@jaffericlinic.com</a>
+                </span>
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3">
-                <Phone className="h-4 w-4 text-emerald-600 sm:h-5 sm:w-5" />
-                <span className="text-sm sm:text-base">+92 300 1234567</span>
+                <Phone className="h-4 w-4 text-emerald-600 sm:h-5 sm:w-5" aria-hidden="true" />
+                <span className="text-xs sm:text-sm sm:text-base">
+                  <a href="tel:+923001234567" className="hover:text-emerald-600 transition">+92 300 1234567</a>
+                </span>
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3">
-                <MapPin className="h-4 w-4 text-emerald-600 sm:h-5 sm:w-5" />
-                <span className="text-sm sm:text-base">Karachi, Pakistan</span>
+                <MapPin className="h-4 w-4 text-emerald-600 sm:h-5 sm:w-5" aria-hidden="true" />
+                <address className="text-xs sm:text-sm sm:text-base not-italic">
+                  Karachi, Pakistan
+                </address>
               </div>
             </div>
           </div>
 
           {/* Links */}
 
-          <div>
-            <h4 className="mb-4 font-bold sm:mb-6">
+          <nav aria-label="Company links">
+            <h4 className="mb-3 font-bold sm:mb-4 sm:mb-6">
               Company
             </h4>
 
-            <div className="space-y-3 sm:space-y-4">
+            <ul className="space-y-2 sm:space-y-3 sm:space-y-4">
               {company.map((item) => (
-                <Link
-                  key={item}
-                  href="/"
-                  className="block text-muted-foreground transition hover:text-emerald-600 text-sm sm:text-base"
-                >
-                  {item}
-                </Link>
+                <li key={item}>
+                  <Link
+                    href="/"
+                    className="block text-xs text-muted-foreground transition hover:text-emerald-600 sm:text-sm sm:text-base"
+                  >
+                    {item}
+                  </Link>
+                </li>
               ))}
-            </div>
-          </div>
+            </ul>
+          </nav>
 
-          <div>
-            <h4 className="mb-4 font-bold sm:mb-6">
+          <nav aria-label="Product links">
+            <h4 className="mb-3 font-bold sm:mb-4 sm:mb-6">
               Product
             </h4>
 
-            <div className="space-y-3 sm:space-y-4">
+            <ul className="space-y-2 sm:space-y-3 sm:space-y-4">
               {product.map((item) => (
-                <Link
-                  key={item}
-                  href="/"
-                  className="block text-muted-foreground transition hover:text-emerald-600 text-sm sm:text-base"
-                >
-                  {item}
-                </Link>
+                <li key={item}>
+                  <Link
+                    href="/"
+                    className="block text-xs text-muted-foreground transition hover:text-emerald-600 sm:text-sm sm:text-base"
+                  >
+                    {item}
+                  </Link>
+                </li>
               ))}
-            </div>
-          </div>
+            </ul>
+          </nav>
 
-          <div>
-            <h4 className="mb-4 font-bold sm:mb-6">
+          <nav aria-label="Resources links">
+            <h4 className="mb-3 font-bold sm:mb-4 sm:mb-6">
               Resources
             </h4>
 
-            <div className="space-y-3 sm:space-y-4">
+            <ul className="space-y-2 sm:space-y-3 sm:space-y-4">
               {resources.map((item) => (
-                <Link
-                  key={item}
-                  href="/"
-                  className="block text-muted-foreground transition hover:text-emerald-600 text-sm sm:text-base"
-                >
-                  {item}
-                </Link>
+                <li key={item}>
+                  <Link
+                    href="/"
+                    className="block text-xs text-muted-foreground transition hover:text-emerald-600 sm:text-sm sm:text-base"
+                  >
+                    {item}
+                  </Link>
+                </li>
               ))}
-            </div>
-          </div>
+            </ul>
+          </nav>
         </div>
 
         {/* Bottom */}
 
-        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t pt-8 sm:mt-12 sm:gap-6 lg:flex-row lg:mt-16 lg:pt-10">
-          <p className="text-center text-sm text-muted-foreground sm:text-base">
+        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border/50 pt-6 sm:mt-10 sm:gap-6 sm:pt-8 lg:flex-row lg:mt-12 lg:pt-10">
+          <p className="text-center text-xs text-muted-foreground sm:text-sm sm:text-base">
             {new Date().getFullYear()} Jafferi Clinic. All rights
             reserved.
           </p>
 
-          <div className="flex gap-4 sm:gap-5">
+          <nav aria-label="Social media links" className="flex gap-3 sm:gap-4 sm:gap-5">
             <Link href="/" aria-label="Facebook">
-              <FaFacebook className="h-4 w-4 transition hover:text-emerald-600 sm:h-5 sm:w-5" />
+              <FaFacebook className="h-4 w-4 transition hover:text-emerald-600 sm:h-5 sm:w-5" aria-hidden="true" />
             </Link>
 
             <Link href="/" aria-label="Twitter">
-              <FaXTwitter className="h-4 w-4 transition hover:text-emerald-600 sm:h-5 sm:w-5" />
+              <FaXTwitter className="h-4 w-4 transition hover:text-emerald-600 sm:h-5 sm:w-5" aria-hidden="true" />
             </Link>
 
             <Link href="/" aria-label="Instagram">
-              <FaInstagram className="h-4 w-4 transition hover:text-emerald-600 sm:h-5 sm:w-5" />
+              <FaInstagram className="h-4 w-4 transition hover:text-emerald-600 sm:h-5 sm:w-5" aria-hidden="true" />
             </Link>
 
             <Link href="/" aria-label="LinkedIn">
-              <FaLinkedin className="h-4 w-4 transition hover:text-emerald-600 sm:h-5 sm:w-5" />
+              <FaLinkedin className="h-4 w-4 transition hover:text-emerald-600 sm:h-5 sm:w-5" aria-hidden="true" />
             </Link>
-          </div>
+          </nav>
         </div>
       </div>
     </footer>
   );
 }
+
+export default memo(Footer);

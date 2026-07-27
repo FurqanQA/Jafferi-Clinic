@@ -2,25 +2,26 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { memo } from "react";
 
-export default function DashboardPreview() {
+function DashboardPreview() {
   return (
-    <section className="relative overflow-hidden py-20 sm:py-24 md:py-32">
-      <div className="absolute left-0 top-0 h-[300px] w-[300px] rounded-full bg-emerald-200 blur-[100px] sm:h-[400px] sm:w-[400px] sm:blur-[120px] md:h-[500px] md:w-[500px] md:blur-[150px]" />
+    <section aria-labelledby="dashboard-preview-heading" className="relative overflow-hidden py-16 sm:py-20 md:py-24 lg:py-28 xl:py-32">
+      <div className="absolute left-0 top-0 h-[250px] w-[250px] rounded-full bg-emerald-200/60 blur-[100px] sm:h-[350px] sm:w-[350px] sm:blur-[120px] md:h-[450px] md:w-[450px] md:blur-[140px] lg:blur-[160px]" aria-hidden="true" />
 
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-block rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700 sm:px-4 sm:py-2 sm:text-sm">
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl px-2 text-center sm:px-0">
+          <span className="badge-premium">
             Dashboard Preview
           </span>
 
-          <h2 className="mt-6 text-3xl font-bold sm:text-4xl lg:text-5xl">
+          <h2 id="dashboard-preview-heading" className="mt-6 text-3xl font-bold sm:mt-8 sm:text-4xl lg:text-5xl">
             Manage Your Entire Clinic
             <br />
             From One Dashboard
           </h2>
 
-          <p className="mt-6 text-base text-muted-foreground sm:text-lg">
+          <p className="mt-4 text-base text-muted-foreground sm:mt-6 sm:text-lg">
             View appointments, patients, doctors, revenue and analytics
             in one beautifully designed dashboard.
           </p>
@@ -35,10 +36,13 @@ export default function DashboardPreview() {
         >
           <Image
             src="/images/dashboard-preview.png"
-            alt="Dashboard Preview"
+            alt="Dashboard interface showing appointments panel, patient records, revenue analytics, and doctor management in a unified view"
             width={1400}
             height={900}
-            className="w-full rounded-2xl border shadow-2xl sm:rounded-3xl"
+            loading="lazy"
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwC3AB//Z"
+            className="w-full rounded-2xl border border-border/50 shadow-2xl sm:rounded-3xl"
           />
 
           {/* Appointment Card */}
@@ -49,14 +53,16 @@ export default function DashboardPreview() {
             transition={{
               duration: 4,
               repeat: Infinity,
+              repeatType: "reverse",
             }}
-            className="absolute -left-4 top-8 hidden w-56 rounded-2xl border bg-white p-4 shadow-2xl sm:-left-6 sm:top-10 sm:w-64 sm:p-5 lg:block"
+            className="absolute -left-3 top-6 hidden w-48 rounded-2xl border border-border/50 bg-white p-3 shadow-2xl sm:-left-4 sm:top-8 sm:w-56 sm:p-4 md:-left-6 md:top-10 md:w-64 md:p-5 lg:block"
+            aria-hidden="true"
           >
             <p className="text-xs text-muted-foreground sm:text-sm">
               Today's Appointments
             </p>
 
-            <h3 className="mt-2 text-3xl font-black sm:mt-2 sm:text-4xl">
+            <h3 className="mt-2 text-2xl font-black sm:mt-2 sm:text-3xl md:text-4xl">
               28
             </h3>
 
@@ -73,19 +79,21 @@ export default function DashboardPreview() {
             transition={{
               duration: 5,
               repeat: Infinity,
+              repeatType: "reverse",
             }}
-            className="absolute -right-4 bottom-16 hidden w-64 rounded-2xl border bg-white p-5 shadow-2xl sm:-right-6 sm:bottom-20 sm:w-72 sm:p-6 lg:block"
+            className="absolute -right-3 bottom-12 hidden w-56 rounded-2xl border border-border/50 bg-white p-4 shadow-2xl sm:-right-4 sm:bottom-16 sm:w-64 sm:p-5 md:-right-6 md:bottom-20 md:w-72 md:p-6 lg:block"
+            aria-hidden="true"
           >
             <p className="text-xs text-muted-foreground sm:text-sm">
               Monthly Revenue
             </p>
 
-            <h3 className="mt-3 text-3xl font-black sm:mt-3 sm:text-4xl">
+            <h3 className="mt-3 text-2xl font-black sm:mt-3 sm:text-3xl md:text-4xl">
               $18,400
             </h3>
 
-            <div className="mt-4 h-2.5 rounded-full bg-gray-100 sm:mt-4 sm:h-3">
-              <div className="h-2.5 w-[75%] rounded-full bg-emerald-500 sm:h-3"></div>
+            <div className="mt-4 h-2 rounded-full bg-gray-100 sm:mt-4 sm:h-2.5 md:h-3">
+              <div className="h-2 w-[75%] rounded-full bg-emerald-500 sm:h-2.5 md:h-3"></div>
             </div>
 
             <p className="mt-4 text-xs text-emerald-600 sm:mt-4 sm:text-sm">
@@ -97,3 +105,5 @@ export default function DashboardPreview() {
     </section>
   );
 }
+
+export default memo(DashboardPreview);
