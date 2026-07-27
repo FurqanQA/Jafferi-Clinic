@@ -60,7 +60,7 @@ export default function Hero() {
             width={900}
             height={650}
             priority
-            className="w-full rounded-2xl border shadow-2xl sm:rounded-3xl"
+            className="w-full rounded-2xl border sm:rounded-3xl"
           />
         </motion.div>
       </div>
