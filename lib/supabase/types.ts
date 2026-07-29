@@ -83,7 +83,6 @@ export interface RegisterCredentials {
   email: string;
   password: string;
   full_name?: string;
-  clinic_name?: string;
   phone?: string;
   role?: UserRole;
 }

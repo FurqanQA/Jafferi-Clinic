@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -70,9 +71,19 @@ export default function LoginForm() {
       className="w-full max-w-md"
     >
       <div className="rounded-2xl border border-white/20 bg-white/60 p-8 shadow-xl backdrop-blur-xl sm:p-10">
-        <h1 className="text-3xl font-bold text-slate-900">
-          Welcome Back
-        </h1>
+        <div className="flex flex-col items-center">
+          <Image
+            src="/images/Jafferi Clinic.png"
+            alt="Jafferi Clinic"
+            width={64}
+            height={64}
+            priority
+            className="h-16 w-16"
+          />
+          <h1 className="mt-4 text-3xl font-bold text-slate-900">
+            Welcome Back
+          </h1>
+        </div>
 
         <p className="mt-2 text-slate-500">
           Sign in to your account to continue

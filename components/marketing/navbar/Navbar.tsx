@@ -65,13 +65,17 @@ function Navbar() {
           </nav>
 
           <div className="hidden items-center gap-2 sm:gap-3 md:flex">
-            <Button variant="ghost" className="text-xs sm:text-sm">
-              Login
-            </Button>
+            <Link href="/login">
+              <Button variant="ghost" className="text-xs sm:text-sm">
+                Login
+              </Button>
+            </Link>
 
-            <Button className="rounded-full bg-emerald-600 px-3 text-xs hover:bg-emerald-700 sm:px-4 sm:text-sm">
-              Book Demo
-            </Button>
+            <Link href="/register">
+              <Button className="rounded-full bg-emerald-600 px-3 text-xs hover:bg-emerald-700 sm:px-4 sm:text-sm">
+                Book Demo
+              </Button>
+            </Link>
           </div>
 
           <button
@@ -148,20 +152,22 @@ function Navbar() {
                 ))}
 
                 <div className="mt-6 space-y-3 sm:space-y-4">
-                  <Button
-                    variant="outline"
-                    className="w-full rounded-full"
-                    onClick={closeMenu}
-                  >
-                    Login
-                  </Button>
+                  <Link href="/login" onClick={closeMenu}>
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-full"
+                    >
+                      Login
+                    </Button>
+                  </Link>
 
-                  <Button
-                    className="w-full rounded-full bg-emerald-600 hover:bg-emerald-700"
-                    onClick={closeMenu}
-                  >
-                    Book Demo
-                  </Button>
+                  <Link href="/register" onClick={closeMenu}>
+                    <Button
+                      className="w-full rounded-full bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      Book Demo
+                    </Button>
+                  </Link>
                 </div>
               </nav>
             </motion.div>

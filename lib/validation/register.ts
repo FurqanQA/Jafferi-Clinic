@@ -6,10 +6,6 @@ export const registerSchema = z
       .string()
       .min(1, "Full name is required")
       .min(3, "Full name must be at least 3 characters"),
-    clinicName: z
-      .string()
-      .min(1, "Clinic name is required")
-      .min(3, "Clinic name must be at least 3 characters"),
     email: z
       .string()
       .min(1, "Email is required")

@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -104,9 +105,19 @@ export default function ForgotPasswordForm() {
           </motion.div>
         ) : (
           <>
-            <h1 className="text-3xl font-bold text-slate-900">
-              Forgot Password?
-            </h1>
+            <div className="flex flex-col items-center">
+              <Image
+                src="/images/Jafferi Clinic.png"
+                alt="Jafferi Clinic"
+                width={64}
+                height={64}
+                priority
+                className="h-16 w-16"
+              />
+              <h1 className="mt-4 text-3xl font-bold text-slate-900">
+                Forgot Password?
+              </h1>
+            </div>
 
             <p className="mt-2 text-slate-500">
               Enter your email and we'll send you a password reset link.

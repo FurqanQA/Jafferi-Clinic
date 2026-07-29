@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { Loader2, CheckCircle2, ArrowLeft, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -159,21 +160,19 @@ export default function ResetPasswordForm() {
               }}
             >
               <div className="mb-8">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{
-                    type: "spring",
-                    duration: 0.5,
-                  }}
-                  className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-emerald-100"
-                >
-                  <Lock className="size-8 text-emerald-600" />
-                </motion.div>
-
-                <h1 className="text-3xl font-bold text-slate-900">
-                  Reset Password
-                </h1>
+                <div className="flex flex-col items-center">
+                  <Image
+                    src="/images/Jafferi Clinic.png"
+                    alt="Jafferi Clinic"
+                    width={64}
+                    height={64}
+                    priority
+                    className="h-16 w-16"
+                  />
+                  <h1 className="mt-4 text-3xl font-bold text-slate-900">
+                    Reset Password
+                  </h1>
+                </div>
 
                 <p className="mt-2 text-slate-500">
                   Create a new secure password for your account

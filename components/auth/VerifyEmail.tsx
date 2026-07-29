@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { Loader2, Mail, ArrowLeft, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -111,27 +112,24 @@ export default function VerifyEmail() {
       className="w-full max-w-md"
     >
       <div className="rounded-2xl border border-white/20 bg-white/60 p-8 shadow-xl backdrop-blur-xl sm:p-10">
-        <motion.div
-          initial={{ scale: 0, y: 20 }}
-          animate={{ scale: 1, y: 0 }}
-          transition={{
-            type: "spring",
-            duration: 0.6,
-            delay: 0.1,
-          }}
-          className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-emerald-100"
-        >
-          <Mail className="size-10 text-emerald-600" />
-        </motion.div>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-center text-3xl font-bold text-slate-900"
-        >
-          Verify Your Email
-        </motion.h1>
+        <div className="flex flex-col items-center">
+          <Image
+            src="/images/Jafferi Clinic.png"
+            alt="Jafferi Clinic"
+            width={64}
+            height={64}
+            priority
+            className="h-16 w-16"
+          />
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-4 text-center text-3xl font-bold text-slate-900"
+          >
+            Verify Your Email
+          </motion.h1>
+        </div>
 
         <motion.p
           initial={{ opacity: 0, y: 10 }}

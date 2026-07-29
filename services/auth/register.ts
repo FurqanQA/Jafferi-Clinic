@@ -4,7 +4,6 @@ import { toAuthenticatedUser, toSession, toAuthError } from '@/lib/supabase/type
 
 export interface RegisterInput {
   fullName?: string;
-  clinicName?: string;
   email: string;
   phone?: string;
   password: string;
@@ -34,7 +33,6 @@ export async function register(input: RegisterInput): Promise<RegisterResult> {
       options: {
         data: {
           full_name: input.fullName || '',
-          clinic_name: input.clinicName || '',
           phone: input.phone || '',
           role: 'Staff' as UserRole, // Default role for new registrations
         },

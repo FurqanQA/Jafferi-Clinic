@@ -6,7 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Loader2, User, Building, Mail, Phone, Check } from "lucide-react";
+import Image from "next/image";
+import { Loader2, User, Mail, Phone, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,6 @@ export default function RegisterForm() {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       fullName: "",
-      clinicName: "",
       email: "",
       phone: "",
       password: "",
@@ -45,7 +45,6 @@ export default function RegisterForm() {
     try {
       const result = await registerUser({
         fullName: data.fullName,
-        clinicName: data.clinicName,
         email: data.email,
         phone: data.phone,
         password: data.password,
@@ -81,9 +80,19 @@ export default function RegisterForm() {
       className="w-full max-w-md"
     >
       <div className="rounded-2xl border border-white/20 bg-white/60 p-8 shadow-xl backdrop-blur-xl sm:p-10">
-        <h1 className="text-3xl font-bold text-slate-900">
-          Create Account
-        </h1>
+        <div className="flex flex-col items-center">
+          <Image
+            src="/images/Jafferi Clinic.png"
+            alt="Jafferi Clinic"
+            width={64}
+            height={64}
+            priority
+            className="h-16 w-16"
+          />
+          <h1 className="mt-4 text-3xl font-bold text-slate-900">
+            Create Account
+          </h1>
+        </div>
 
         <p className="mt-2 text-slate-500">
           Start managing your clinic today
@@ -94,74 +103,38 @@ export default function RegisterForm() {
           className="mt-8 space-y-5"
           noValidate
         >
-          <div className="grid gap-5 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label
-                htmlFor="fullName"
-                className="text-sm font-medium text-slate-700"
-              >
-                Full Name
-              </label>
+          <div className="space-y-2">
+            <label
+              htmlFor="fullName"
+              className="text-sm font-medium text-slate-700"
+            >
+              Full Name
+            </label>
 
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
 
-                <Input
-                  id="fullName"
-                  placeholder="John Doe"
-                  autoComplete="name"
-                  disabled={isSubmitting}
-                  aria-invalid={errors.fullName ? "true" : "false"}
-                  aria-describedby={errors.fullName ? "fullName-error" : undefined}
-                  className="pl-10"
-                  {...register("fullName")}
-                />
-              </div>
-
-              {errors.fullName && (
-                <p
-                  id="fullName-error"
-                  className="text-sm text-destructive"
-                  role="alert"
-                >
-                  {errors.fullName.message}
-                </p>
-              )}
+              <Input
+                id="fullName"
+                placeholder="John Doe"
+                autoComplete="name"
+                disabled={isSubmitting}
+                aria-invalid={errors.fullName ? "true" : "false"}
+                aria-describedby={errors.fullName ? "fullName-error" : undefined}
+                className="pl-10"
+                {...register("fullName")}
+              />
             </div>
 
-            <div className="space-y-2">
-              <label
-                htmlFor="clinicName"
-                className="text-sm font-medium text-slate-700"
+            {errors.fullName && (
+              <p
+                id="fullName-error"
+                className="text-sm text-destructive"
+                role="alert"
               >
-                Clinic Name
-              </label>
-
-              <div className="relative">
-                <Building className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-
-                <Input
-                  id="clinicName"
-                  placeholder="Your Clinic"
-                  autoComplete="organization"
-                  disabled={isSubmitting}
-                  aria-invalid={errors.clinicName ? "true" : "false"}
-                  aria-describedby={errors.clinicName ? "clinicName-error" : undefined}
-                  className="pl-10"
-                  {...register("clinicName")}
-                />
-              </div>
-
-              {errors.clinicName && (
-                <p
-                  id="clinicName-error"
-                  className="text-sm text-destructive"
-                  role="alert"
-                >
-                  {errors.clinicName.message}
-                </p>
-              )}
-            </div>
+                {errors.fullName.message}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
