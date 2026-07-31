@@ -19,18 +19,20 @@ export type ResourceType =
   | 'billing'
   | 'reports'
   | 'settings'
-  | 'users';
+  | 'users'
+  | 'medical_records'
+  | 'prescriptions';
 
 /**
  * Role permissions mapping
  */
 export const ROLE_PERMISSIONS: Record<UserRole, ResourceType[]> = {
-  owner: ['patients', 'appointments', 'doctors', 'clinics', 'billing', 'reports', 'settings', 'users'],
-  administrator: ['patients', 'appointments', 'doctors', 'clinics', 'billing', 'reports', 'settings'],
-  doctor: ['patients', 'appointments', 'reports'],
-  receptionist: ['patients', 'appointments'],
+  owner: ['patients', 'appointments', 'doctors', 'clinics', 'billing', 'reports', 'settings', 'users', 'medical_records', 'prescriptions'],
+  administrator: ['patients', 'appointments', 'doctors', 'clinics', 'billing', 'reports', 'settings', 'medical_records', 'prescriptions'],
+  doctor: ['patients', 'appointments', 'reports', 'medical_records', 'prescriptions'],
+  receptionist: ['patients', 'appointments', 'medical_records', 'prescriptions'],
   accountant: ['billing', 'reports'],
-  staff: ['patients', 'appointments'],
+  staff: ['patients', 'appointments', 'medical_records', 'prescriptions'],
 };
 
 /**
@@ -66,9 +68,9 @@ export function canWrite(role: UserRole, resource: ResourceType): boolean {
     return resource === 'billing';
   }
   
-  // Doctors can write to patients and appointments
+  // Doctors can write to patients, appointments, medical_records, and prescriptions
   if (role === 'doctor') {
-    return ['patients', 'appointments'].includes(resource);
+    return ['patients', 'appointments', 'medical_records', 'prescriptions'].includes(resource);
   }
   
   // Owners and administrators have full write access
