@@ -1,6 +1,7 @@
 import { getSupabaseClient } from '../core/client';
 import { DatabaseError } from '../core/errors';
 import { getUserClinicId } from '../core/auth';
+import { objectsToCSV } from '../core/export-csv';
 import { logger } from '../shared/logger';
 import { validateExportPatientsPermission } from './patient-permissions';
 import { PatientExportData, Patient } from './patient-types';
@@ -93,11 +94,6 @@ export async function exportPatients(params?: {
  * Convert export data to CSV string
  */
 export function patientsToCSV(data: PatientExportData[]): string {
-  if (data.length === 0) {
-    return '';
-  }
-
-  // CSV headers
   const headers = [
     'Medical Record Number',
     'Full Name',
@@ -121,8 +117,7 @@ export function patientsToCSV(data: PatientExportData[]): string {
     'Created At',
   ];
 
-  // Convert data to CSV rows
-  const rows = data.map(patient => [
+  return objectsToCSV(headers, data, (patient) => [
     patient.medical_record_number,
     patient.full_name,
     patient.date_of_birth,
@@ -144,20 +139,4 @@ export function patientsToCSV(data: PatientExportData[]): string {
     patient.status,
     patient.created_at,
   ]);
-
-  // Escape CSV values
-  const escapeCSV = (value: string): string => {
-    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-      return `"${value.replace(/"/g, '""')}"`;
-    }
-    return value;
-  };
-
-  // Build CSV string
-  const csvRows = [
-    headers.join(','),
-    ...rows.map(row => row.map(escapeCSV).join(',')),
-  ];
-
-  return csvRows.join('\n');
 }

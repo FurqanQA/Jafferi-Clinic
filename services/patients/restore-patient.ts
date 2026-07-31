@@ -1,6 +1,4 @@
-import { getSupabaseClient } from '../core/client';
-import { NotFoundError, DatabaseError } from '../core/errors';
-import { getUserClinicId } from '../core/auth';
+import { restoreRecord } from '../core/base-crud';
 import { logger } from '../shared/logger';
 import { validatePatientId } from './patient-validation';
 import { validateRestorePatientPermission, validatePatientClinicAccess } from './patient-permissions';
@@ -19,40 +17,7 @@ export async function restorePatient(patientId: string): Promise<Patient> {
   // Validate clinic access
   await validatePatientClinicAccess(patientId);
 
-  // Get clinic ID
-  const clinicId = await getUserClinicId();
-
-  const supabase = getSupabaseClient();
-
-  try {
-    const { data, error } = await supabase
-      .from('patients')
-      .update({
-        deleted_at: null,
-        is_active: true,
-        status: 'active',
-      })
-      .eq('id', patientId)
-      .eq('clinic_id', clinicId)
-      .select()
-      .single();
-
-    if (error) {
-      logger.error('Failed to restore patient', { error, patientId, clinicId });
-      throw new DatabaseError('Failed to restore patient', { error });
-    }
-
-    if (!data) {
-      throw new NotFoundError('Patient not found');
-    }
-
-    logger.info('Patient restored successfully', { patientId, clinicId });
-    return data as Patient;
-  } catch (error) {
-    if (error instanceof NotFoundError || error instanceof DatabaseError) {
-      throw error;
-    }
-    logger.error('Unexpected error restoring patient', { error, patientId, clinicId });
-    throw new DatabaseError('Failed to restore patient', { error });
-  }
+  const data = await restoreRecord('patients', patientId);
+  logger.info('Patient restored successfully', { patientId });
+  return data as Patient;
 }

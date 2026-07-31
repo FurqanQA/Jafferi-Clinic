@@ -1,14 +1,13 @@
-import { getSupabaseClient } from '../core/client';
-import { NotFoundError, DatabaseError } from '../core/errors';
-import { getUserClinicId } from '../core/auth';
+import { softDelete } from '../core/base-crud';
 import { logger } from '../shared/logger';
 import { validatePatientId } from './patient-validation';
 import { validateDeletePatientPermission, validatePatientClinicAccess } from './patient-permissions';
+import { Patient } from './patient-types';
 
 /**
  * Soft delete a patient
  */
-export async function deletePatient(patientId: string): Promise<void> {
+export async function deletePatient(patientId: string): Promise<Patient> {
   // Validate permissions
   await validateDeletePatientPermission();
 
@@ -18,33 +17,7 @@ export async function deletePatient(patientId: string): Promise<void> {
   // Validate clinic access
   await validatePatientClinicAccess(patientId);
 
-  // Get clinic ID
-  const clinicId = await getUserClinicId();
-
-  const supabase = getSupabaseClient();
-
-  try {
-    const { error } = await supabase
-      .from('patients')
-      .update({
-        deleted_at: new Date().toISOString(),
-        is_active: false,
-        status: 'inactive',
-      })
-      .eq('id', patientId)
-      .eq('clinic_id', clinicId);
-
-    if (error) {
-      logger.error('Failed to delete patient', { error, patientId, clinicId });
-      throw new DatabaseError('Failed to delete patient', { error });
-    }
-
-    logger.info('Patient deleted successfully', { patientId, clinicId });
-  } catch (error) {
-    if (error instanceof DatabaseError) {
-      throw error;
-    }
-    logger.error('Unexpected error deleting patient', { error, patientId, clinicId });
-    throw new DatabaseError('Failed to delete patient', { error });
-  }
+  const data = await softDelete('patients', patientId);
+  logger.info('Patient deleted successfully', { patientId });
+  return data as Patient;
 }

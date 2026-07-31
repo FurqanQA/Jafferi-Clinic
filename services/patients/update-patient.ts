@@ -1,6 +1,7 @@
 import { getSupabaseClient } from '../core/client';
 import { NotFoundError, DatabaseError } from '../core/errors';
 import { getUserClinicId } from '../core/auth';
+import { checkDuplicateEmail, checkDuplicatePhone } from '../core/duplicate-checker';
 import { logger } from '../shared/logger';
 import { validateUpdatePatient, validatePatientId } from './patient-validation';
 import { validateUpdatePatientPermission, validatePatientClinicAccess } from './patient-permissions';
@@ -28,37 +29,9 @@ export async function updatePatient(patientId: string, input: UpdatePatientInput
   const supabase = getSupabaseClient();
 
   try {
-    // Check for duplicate email if email is being updated
-    if (validatedInput.email) {
-      const { data: existingEmail } = await supabase
-        .from('patients')
-        .select('id')
-        .eq('clinic_id', clinicId)
-        .eq('email', validatedInput.email)
-        .neq('id', patientId)
-        .eq('deleted_at', null)
-        .single();
-
-      if (existingEmail) {
-        throw new NotFoundError('A patient with this email already exists');
-      }
-    }
-
-    // Check for duplicate phone if phone is being updated
-    if (validatedInput.phone) {
-      const { data: existingPhone } = await supabase
-        .from('patients')
-        .select('id')
-        .eq('clinic_id', clinicId)
-        .eq('phone', validatedInput.phone)
-        .neq('id', patientId)
-        .eq('deleted_at', null)
-        .single();
-
-      if (existingPhone) {
-        throw new NotFoundError('A patient with this phone number already exists');
-      }
-    }
+    // Check for duplicate email and phone if being updated
+    await checkDuplicateEmail('patients', validatedInput.email, patientId);
+    await checkDuplicatePhone('patients', validatedInput.phone, patientId);
 
     // Update patient
     const { data, error } = await supabase
