@@ -1,7 +1,7 @@
 /**
  * User roles in the system
  */
-export type UserRole = 'owner' | 'administrator' | 'doctor' | 'receptionist' | 'accountant' | 'staff';
+export type UserRole = 'owner' | 'administrator' | 'doctor' | 'receptionist' | 'accountant' | 'staff' | 'lab_technician' | 'radiologist';
 
 /**
  * Permission levels
@@ -21,18 +21,21 @@ export type ResourceType =
   | 'settings'
   | 'users'
   | 'medical_records'
-  | 'prescriptions';
+  | 'prescriptions'
+  | 'laboratory';
 
 /**
  * Role permissions mapping
  */
 export const ROLE_PERMISSIONS: Record<UserRole, ResourceType[]> = {
-  owner: ['patients', 'appointments', 'doctors', 'clinics', 'billing', 'reports', 'settings', 'users', 'medical_records', 'prescriptions'],
-  administrator: ['patients', 'appointments', 'doctors', 'clinics', 'billing', 'reports', 'settings', 'medical_records', 'prescriptions'],
-  doctor: ['patients', 'appointments', 'reports', 'medical_records', 'prescriptions'],
-  receptionist: ['patients', 'appointments', 'medical_records', 'prescriptions'],
+  owner: ['patients', 'appointments', 'doctors', 'clinics', 'billing', 'reports', 'settings', 'users', 'medical_records', 'prescriptions', 'laboratory'],
+  administrator: ['patients', 'appointments', 'doctors', 'clinics', 'billing', 'reports', 'settings', 'medical_records', 'prescriptions', 'laboratory'],
+  doctor: ['patients', 'appointments', 'reports', 'medical_records', 'prescriptions', 'laboratory'],
+  receptionist: ['patients', 'appointments', 'medical_records', 'prescriptions', 'laboratory'],
   accountant: ['billing', 'reports'],
-  staff: ['patients', 'appointments', 'medical_records', 'prescriptions'],
+  staff: ['patients', 'appointments', 'medical_records', 'prescriptions', 'laboratory'],
+  lab_technician: ['laboratory'],
+  radiologist: ['laboratory'],
 };
 
 /**
