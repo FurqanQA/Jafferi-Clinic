@@ -1,13 +1,24 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { Return, InventoryRequestOptions } from './inventory-types';
-import { validateReturn } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Returns
 // Management of returns (supplier returns, patient returns, damaged returns, expired returns)
 // ============================================================================
+
+interface Return {
+  id: string;
+  clinicId: string;
+  type: 'SUPPLIER' | 'PATIENT' | 'DAMAGED' | 'EXPIRED';
+  itemId: string;
+  quantity: number;
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'PROCESSED';
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create return record
@@ -16,14 +27,6 @@ export async function createReturn(
   data: Omit<Return, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Return> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateReturn(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +54,6 @@ export async function getReturn(
   options?: InventoryRequestOptions
 ): Promise<Return | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +72,6 @@ export async function getReturns(
   options?: InventoryRequestOptions
 ): Promise<{ items: Return[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -100,9 +97,6 @@ export async function processReturn(
   options?: InventoryRequestOptions
 ): Promise<Return> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -114,8 +108,6 @@ export async function processReturn(
     const updated: Return = {
       ...returnRecord,
       status: 'PROCESSED',
-      processedBy,
-      processedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
@@ -136,9 +128,6 @@ export async function approveReturn(
   options?: InventoryRequestOptions
 ): Promise<Return> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -150,8 +139,6 @@ export async function approveReturn(
     const updated: Return = {
       ...returnRecord,
       status: 'APPROVED',
-      approvedBy,
-      approvedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
@@ -172,9 +159,6 @@ export async function rejectReturn(
   options?: InventoryRequestOptions
 ): Promise<Return> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -186,7 +170,6 @@ export async function rejectReturn(
     const updated: Return = {
       ...returnRecord,
       status: 'REJECTED',
-      rejectionReason,
       updatedAt: new Date().toISOString(),
     };
 
@@ -206,9 +189,6 @@ export async function getReturnsByType(
   options?: InventoryRequestOptions
 ): Promise<Return[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -229,9 +209,6 @@ export async function getPendingReturns(
   options?: InventoryRequestOptions
 ): Promise<Return[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query

@@ -1,9 +1,11 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, AuthorizationError, DatabaseError } from '../core/errors';
 import { logger } from '../shared/logger';
 import { Document } from './document-types';
 import { validateDocumentEditPermission } from './document-permissions';
 import { updateDocumentSchema } from './document-validation';
 import { logDocumentAction } from './audit';
+import { getSupabaseClient } from '../core/client';
 
 // ============================================================================
 // Update Document Service
@@ -24,6 +26,7 @@ export async function updateDocument(
 ): Promise<Document> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
@@ -37,30 +40,47 @@ export async function updateDocument(
       });
     }
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
-    const updatedDocument: Document = {
-      ...document,
-      ...updates,
-      updatedAt: new Date().toISOString(),
-      updatedBy: user.id,
-    };
+    // Update document in database
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({
+        title: updates.title,
+        description: updates.description,
+        tags: updates.tags,
+        metadata: updates.metadata,
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+      })
+      .eq('id', documentId)
+      .select()
+      .single();
 
-    // Placeholder for database update
+    if (updateError) {
+      throw new DatabaseError('Failed to update document', { error: updateError });
+    }
+
     await logDocumentAction(documentId, 'edit', updates);
 
     logger.info('Document updated', { documentId, updates, clinicId, userId: user.id });
-    return updatedDocument;
+    return updatedDocument as Document;
   } catch (error) {
     logger.error('Failed to update document', { error, documentId, clinicId, userId: user.id });
     throw error;
@@ -76,33 +96,48 @@ export async function moveDocumentToFolder(
 ): Promise<Document> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     await validateDocumentEditPermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
-    const updatedDocument: Document = {
-      ...document,
-      folderId,
-      updatedAt: new Date().toISOString(),
-      updatedBy: user.id,
-    };
+    // Update document in database
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({
+        folder_id: folderId,
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+      })
+      .eq('id', documentId)
+      .select()
+      .single();
 
-    // Placeholder for database update
+    if (updateError) {
+      throw new DatabaseError('Failed to move document to folder', { error: updateError });
+    }
+
     await logDocumentAction(documentId, 'edit', { folderId });
 
     logger.info('Document moved to folder', { documentId, folderId, clinicId, userId: user.id });
-    return updatedDocument;
+    return updatedDocument as Document;
   } catch (error) {
     logger.error('Failed to move document to folder', { error, documentId, folderId, clinicId, userId: user.id });
     throw error;
@@ -118,33 +153,48 @@ export async function updateDocumentStatus(
 ): Promise<Document> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     await validateDocumentEditPermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
-    const updatedDocument: Document = {
-      ...document,
-      status: status as any,
-      updatedAt: new Date().toISOString(),
-      updatedBy: user.id,
-    };
+    // Update document in database
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({
+        status,
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+      })
+      .eq('id', documentId)
+      .select()
+      .single();
 
-    // Placeholder for database update
+    if (updateError) {
+      throw new DatabaseError('Failed to update document status', { error: updateError });
+    }
+
     await logDocumentAction(documentId, 'edit', { status });
 
     logger.info('Document status updated', { documentId, status, clinicId, userId: user.id });
-    return updatedDocument;
+    return updatedDocument as Document;
   } catch (error) {
     logger.error('Failed to update document status', { error, documentId, status, clinicId, userId: user.id });
     throw error;

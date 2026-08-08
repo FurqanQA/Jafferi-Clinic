@@ -51,8 +51,8 @@ export async function searchPatients(params: PatientSearchParams): Promise<Patie
         query = query.eq('gender', filters.gender);
       }
 
-      if (filters.blood_group) {
-        query = query.eq('blood_group', filters.blood_group);
+      if (filters.blood_type) {
+        query = query.eq('blood_type', filters.blood_type);
       }
 
       if (filters.created_from) {

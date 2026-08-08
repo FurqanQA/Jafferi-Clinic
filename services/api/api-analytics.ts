@@ -7,6 +7,29 @@ import { cache } from '../shared/cache';
 // ============================================================================
 
 /**
+ * Monitoring event type
+ */
+export type MonitoringEventType = 'request' | 'response' | 'error';
+
+/**
+ * Monitoring event structure
+ */
+export interface MonitoringEvent {
+  type: MonitoringEventType;
+  timestamp: string;
+  clinicId?: string;
+  userId?: string;
+  apiKeyId?: string;
+  method?: string;
+  endpoint?: string;
+  statusCode?: number;
+  duration?: number;
+  errorMessage?: string;
+  level?: string;
+  message?: string;
+}
+
+/**
  * Analytics Report
  */
 export interface AnalyticsReport {
@@ -99,9 +122,9 @@ export async function generateAnalyticsReport(
       const bucketData = cache.get<string>(bucketKey);
 
       if (bucketData) {
-        const events = JSON.parse(bucketData);
+        const events = JSON.parse(bucketData) as MonitoringEvent[];
         const filtered = options.clinicId
-          ? events.filter((e: any) => e.clinicId === options.clinicId)
+          ? events.filter((e: MonitoringEvent) => e.clinicId === options.clinicId)
           : events;
 
         for (const event of filtered) {
@@ -270,9 +293,9 @@ export async function getUsageTrends(
     const latencies: number[] = [];
 
     if (bucketData) {
-      const events = JSON.parse(bucketData);
+      const events = JSON.parse(bucketData) as MonitoringEvent[];
       const filtered = clinicId
-        ? events.filter((e: any) => e.clinicId === clinicId)
+        ? events.filter((e: MonitoringEvent) => e.clinicId === clinicId)
         : events;
 
       for (const event of filtered) {
@@ -325,9 +348,9 @@ export async function getEndpointPopularity(
     const bucketData = cache.get<string>(bucketKey);
 
     if (bucketData) {
-      const events = JSON.parse(bucketData);
+      const events = JSON.parse(bucketData) as MonitoringEvent[];
       const filtered = clinicId
-        ? events.filter((e: any) => e.clinicId === clinicId)
+        ? events.filter((e: MonitoringEvent) => e.clinicId === clinicId)
         : events;
 
       for (const event of filtered) {

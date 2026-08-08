@@ -1,7 +1,9 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, AuthorizationError } from '../core/errors';
 import { logger } from '../shared/logger';
 import { Document, DocumentStatus, DocumentCategory, FileFormat } from './document-types';
 import { validateDocumentViewPermission, validateDocumentEditPermission } from './document-permissions';
+import { getSupabaseClient } from '../core/client';
 
 // ============================================================================
 // Document Engine
@@ -81,21 +83,28 @@ export async function getDocumentWithContext(documentId: string): Promise<{
 }> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentViewPermission(documentId);
 
-    // Placeholder for fetching document with context
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (error || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     // Placeholder for permission checks
@@ -107,7 +116,7 @@ export async function getDocumentWithContext(documentId: string): Promise<{
 
     // Placeholder for version and access counts
     const versionCount = 1;
-    const downloadCount = document.downloadCount;
+    const downloadCount = document.download_count;
 
     logger.info('Document context retrieved', { documentId, clinicId, userId: user.id });
     return {
@@ -119,7 +128,7 @@ export async function getDocumentWithContext(documentId: string): Promise<{
       canShare,
       versionCount,
       downloadCount,
-      lastAccessedAt: document.lastAccessedAt,
+      lastAccessedAt: document.last_accessed_at,
     };
   } catch (error) {
     logger.error('Failed to get document context', { error, documentId, clinicId, userId: user.id });
@@ -137,16 +146,23 @@ export async function validateDocumentForOperation(
 ): Promise<{ valid: boolean; reason?: string }> {
   try {
     const clinicId = await getUserClinicId();
+    const supabase = getSupabaseClient();
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('clinic_id, status, expires_at')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
+    if (fetchError || !document) {
       return { valid: false, reason: 'Document not found' };
     }
 
     // Check clinic isolation
-    if (document.clinicId !== clinicId) {
+    if (document.clinic_id !== clinicId) {
       return { valid: false, reason: 'Access denied: clinic mismatch' };
     }
 
@@ -160,7 +176,7 @@ export async function validateDocumentForOperation(
     }
 
     // Check expiration
-    if (document.expiresAt && new Date(document.expiresAt) < new Date()) {
+    if (document.expires_at && new Date(document.expires_at) < new Date()) {
       return { valid: false, reason: 'Document has expired' };
     }
 
@@ -203,8 +219,28 @@ export async function updateDocumentAccessTracking(
   try {
     const user = await getCurrentUser();
     const clinicId = await getUserClinicId();
+    const supabase = getSupabaseClient();
 
-    // Placeholder for updating access tracking
+    // Update access tracking in database
+    const updateData: any = {
+      last_accessed_at: new Date().toISOString(),
+    };
+
+    if (accessType === 'download') {
+      updateData.download_count = (await supabase
+        .from('documents')
+        .select('download_count')
+        .eq('id', documentId)
+        .single()).data?.download_count || 0 + 1;
+      updateData.last_downloaded_at = new Date().toISOString();
+    }
+
+    await supabase
+      .from('documents')
+      .update(updateData)
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId);
+
     logger.info('Document access tracking updated', { 
       documentId, 
       accessType, 

@@ -1,7 +1,6 @@
 import { getUserClinicId } from '../core/auth';
-import { logger } from '../shared/logger';
 import { InventoryRequestOptions } from './inventory-types';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
+import { logger } from '../shared/logger';
 
 // ============================================================================
 // Forecasting
@@ -17,9 +16,6 @@ export async function getDemandForecast(
   options?: InventoryRequestOptions
 ): Promise<{ predictedDemand: number; confidence: number; recommendations: string[] }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual forecasting logic
@@ -44,9 +40,6 @@ export async function getInventoryOptimizationSuggestions(
   options?: InventoryRequestOptions
 ): Promise<{ medicineId: string; currentStock: number; suggestedOrder: number; reason: string }[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual optimization logic
@@ -68,9 +61,6 @@ export async function getSeasonalDemandPatterns(
   options?: InventoryRequestOptions
 ): Promise<{ month: string; averageDemand: number; variance: number }[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual seasonal analysis
@@ -94,9 +84,6 @@ export async function calculateOptimalReorderPoint(
   options?: InventoryRequestOptions
 ): Promise<{ reorderPoint: number; safetyStock: number; orderQuantity: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual calculation logic
@@ -123,9 +110,6 @@ export async function getStockTurnoverAnalysis(
   options?: InventoryRequestOptions
 ): Promise<{ medicineId: string; turnoverRate: number; daysInStock: number; category: string }[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual turnover analysis

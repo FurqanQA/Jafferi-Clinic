@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { validateData } from '../core/validation';
-import { PatientGender, BloodGroup, CreatePatientInput, UpdatePatientInput } from './patient-types';
+import { PatientGender, BloodType, CreatePatientInput, UpdatePatientInput } from './patient-types';
+import { ValidationError } from '../core/errors';
 
 /**
  * Zod schema for creating a patient
@@ -23,10 +24,8 @@ export const createPatientSchema = z.object({
       const maxAge = new Date(now.getFullYear() - 0, now.getMonth(), now.getDate());
       return dob <= maxAge && dob >= minAge;
     }, 'Date of birth must be a valid date between 0 and 120 years ago'),
-  gender: z.enum(['male', 'female', 'other'], {
-    errorMap: () => ({ message: 'Gender must be male, female, or other' }),
-  }),
-  blood_group: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).optional(),
+  gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']),
+  blood_type: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).optional(),
   phone: z.string()
     .min(10, 'Phone number must be at least 10 characters')
     .max(20, 'Phone number must not exceed 20 characters')
@@ -103,10 +102,8 @@ export const updatePatientSchema = z.object({
       return dob <= maxAge && dob >= minAge;
     }, 'Date of birth must be a valid date between 0 and 120 years ago')
     .optional(),
-  gender: z.enum(['male', 'female', 'other'], {
-    errorMap: () => ({ message: 'Gender must be male, female, or other' }),
-  }).optional(),
-  blood_group: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).optional(),
+  gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']).optional(),
+  blood_type: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).optional(),
   phone: z.string()
     .min(10, 'Phone number must be at least 10 characters')
     .max(20, 'Phone number must not exceed 20 characters')
@@ -181,7 +178,7 @@ export function validateUpdatePatient(data: unknown): UpdatePatientInput {
  */
 export function validatePatientId(id: string): string {
   if (!id || typeof id !== 'string') {
-    throw new Error('Invalid patient ID');
+    throw new ValidationError('Invalid patient ID');
   }
   return id;
 }

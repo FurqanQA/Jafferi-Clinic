@@ -1,9 +1,22 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, AuthorizationError, ValidationError } from '../core/errors';
 import { logger } from '../shared/logger';
-import { Document, DownloadSession } from './document-types';
+import { Document, StorageBucket } from './document-types';
 import { validateDocumentDownloadPermission } from './document-permissions';
 import { downloadFromStorage, generateSignedUrl } from './storage';
 import { updateDocumentAccessTracking } from './document-engine';
+import { getSupabaseClient } from '../core/client';
+
+interface DownloadSession {
+  id: string;
+  documentId: string;
+  userId: string;
+  downloadUrl: string;
+  expiresAt: string;
+  accessCount: number;
+  maxAccess?: number;
+  createdAt: string;
+}
 
 // ============================================================================
 // File Download Service
@@ -20,33 +33,45 @@ export async function downloadFile(documentId: string): Promise<{
 }> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentDownloadPermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (error || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     // Download from storage
-    const data = await downloadFromStorage(document.filePath, 'private' as any);
+    const data = await downloadFromStorage(document.file_path, StorageBucket.PRIVATE);
 
     // Update access tracking
     await updateDocumentAccessTracking(documentId, 'download');
 
-    // Placeholder for incrementing download count
+    // Increment download count
+    await supabase
+      .from('documents')
+      .update({ download_count: (document.download_count || 0) + 1, last_downloaded_at: new Date().toISOString() })
+      .eq('id', documentId);
+
     logger.info('File downloaded', { 
       documentId, 
-      fileName: document.fileName, 
+      fileName: document.file_name, 
       fileSize: data.length, 
       clinicId, 
       userId: user.id 
@@ -54,8 +79,8 @@ export async function downloadFile(documentId: string): Promise<{
 
     return {
       data,
-      fileName: document.fileName,
-      mimeType: document.mimeType,
+      fileName: document.file_name,
+      mimeType: document.mime_type,
     };
   } catch (error) {
     logger.error('Failed to download file', { error, documentId, clinicId, userId: user.id });
@@ -73,25 +98,27 @@ export async function generateDownloadLink(
 ): Promise<DownloadSession> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentDownloadPermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('file_path')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
-    }
-
-    // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Generate signed URL
-    const downloadUrl = await generateSignedUrl(document.filePath, expiresIn, 'private' as any);
+    const downloadUrl = await generateSignedUrl(document.file_path, expiresIn, StorageBucket.PRIVATE);
 
     // Create download session
     const session: DownloadSession = {
@@ -134,29 +161,32 @@ export async function getDownloadSession(sessionId: string): Promise<DownloadSes
   const clinicId = await getUserClinicId();
 
   try {
-    // Placeholder for session retrieval
-    const session: DownloadSession | null = null;
+    // Retrieve session from database
+    const { data: session, error } = await getSupabaseClient()
+      .from('download_sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .single();
 
-    if (!session) {
-      throw new Error('Download session not found');
+    if (error || !session) {
+      throw new NotFoundError('Download session not found');
     }
 
     // Verify ownership
     if (session.userId !== user.id) {
-      throw new Error('Access denied');
+      throw new AuthorizationError('Access denied');
     }
 
     // Check expiration
     if (new Date(session.expiresAt) < new Date()) {
-      throw new Error('Download link has expired');
+      throw new ValidationError('Download link has expired');
     }
 
     // Check access limit
     if (session.maxAccess && session.accessCount >= session.maxAccess) {
-      throw new Error('Download limit exceeded');
+      throw new ValidationError('Download link has reached maximum access limit');
     }
 
-    logger.info('Download session retrieved', { sessionId, clinicId, userId: user.id });
     return session;
   } catch (error) {
     logger.error('Failed to get download session', { 
@@ -244,7 +274,7 @@ export async function streamFileDownload(
     const document: Document | null = null;
 
     if (!document) {
-      throw new Error('Document not found');
+      throw new NotFoundError('Document not found');
     }
 
     // Placeholder for streaming implementation

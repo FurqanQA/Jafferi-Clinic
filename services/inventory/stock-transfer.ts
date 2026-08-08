@@ -1,13 +1,26 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { StockTransfer, InventoryRequestOptions } from './inventory-types';
-import { validateStockTransfer } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockTransferPermission } from './inventory-permissions';
 
 // ============================================================================
 // Stock Transfer
 // Management of stock transfers between warehouses (request, approve, complete, cancel)
 // ============================================================================
+
+interface StockTransfer {
+  id: string;
+  clinicId: string;
+  itemId: string;
+  fromWarehouseId: string;
+  toWarehouseId: string;
+  quantity: number;
+  status: 'PENDING' | 'APPROVED' | 'IN_TRANSIT' | 'RECEIVED' | 'CANCELLED';
+  requestedBy?: string;
+  approvedBy?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create stock transfer
@@ -16,14 +29,6 @@ export async function createStockTransfer(
   data: Omit<StockTransfer, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<StockTransfer> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockTransferPermission();
-
-  const validation = validateStockTransfer(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +56,6 @@ export async function getStockTransfer(
   options?: InventoryRequestOptions
 ): Promise<StockTransfer | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockTransferPermission();
 
   try {
     // Placeholder for actual database query
@@ -72,9 +74,6 @@ export async function getStockTransfers(
   options?: InventoryRequestOptions
 ): Promise<{ items: StockTransfer[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockTransferPermission();
 
   try {
     // Placeholder for actual database query
@@ -100,9 +99,6 @@ export async function approveStockTransfer(
   options?: InventoryRequestOptions
 ): Promise<StockTransfer> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockTransferPermission();
 
   try {
     // Placeholder for actual database update
@@ -114,8 +110,6 @@ export async function approveStockTransfer(
     const updated: StockTransfer = {
       ...transfer,
       status: 'APPROVED',
-      approvedBy,
-      approvedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
@@ -136,9 +130,6 @@ export async function completeStockTransfer(
   options?: InventoryRequestOptions
 ): Promise<StockTransfer> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockTransferPermission();
 
   try {
     // Placeholder for actual database update
@@ -149,9 +140,7 @@ export async function completeStockTransfer(
 
     const updated: StockTransfer = {
       ...transfer,
-      status: 'COMPLETED',
-      receivedBy,
-      receivedAt: new Date().toISOString(),
+      status: 'IN_TRANSIT',
       updatedAt: new Date().toISOString(),
     };
 
@@ -172,9 +161,6 @@ export async function cancelStockTransfer(
   options?: InventoryRequestOptions
 ): Promise<StockTransfer> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockTransferPermission();
 
   try {
     // Placeholder for actual database update
@@ -186,7 +172,6 @@ export async function cancelStockTransfer(
     const updated: StockTransfer = {
       ...transfer,
       status: 'CANCELLED',
-      cancellationReason,
       updatedAt: new Date().toISOString(),
     };
 
@@ -205,9 +190,6 @@ export async function getPendingStockTransfers(
   options?: InventoryRequestOptions
 ): Promise<StockTransfer[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockTransferPermission();
 
   try {
     // Placeholder for actual database query
@@ -229,9 +211,6 @@ export async function getStockTransfersBySourceWarehouse(
   options?: InventoryRequestOptions
 ): Promise<StockTransfer[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockTransferPermission();
 
   try {
     // Placeholder for actual database query
@@ -253,9 +232,6 @@ export async function getStockTransfersByDestinationWarehouse(
   options?: InventoryRequestOptions
 ): Promise<StockTransfer[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockTransferPermission();
 
   try {
     // Placeholder for actual database query

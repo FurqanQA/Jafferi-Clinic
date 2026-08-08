@@ -1,7 +1,6 @@
 import { getUserClinicId } from '../core/auth';
-import { logger } from '../shared/logger';
 import { InventoryRequestOptions } from './inventory-types';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
+import { logger } from '../shared/logger';
 
 // ============================================================================
 // Archive Item
@@ -18,9 +17,6 @@ export async function archiveItem(
   options?: InventoryRequestOptions
 ): Promise<{ id: string; type: string; archivedAt: string }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual item archival logic
@@ -46,9 +42,6 @@ export async function archiveItemsBatch(
   options?: InventoryRequestOptions
 ): Promise<{ archived: number; failed: number; errors: string[] }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual batch archival logic

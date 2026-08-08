@@ -1,8 +1,10 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, AuthorizationError } from '../core/errors';
 import { logger } from '../shared/logger';
 import { Document } from './document-types';
 import { validateDocumentViewPermission } from './document-permissions';
 import { logDocumentAction } from './audit';
+import { getSupabaseClient } from '../core/client';
 
 // ============================================================================
 // Get Document Service
@@ -15,28 +17,40 @@ import { logDocumentAction } from './audit';
 export async function getDocument(documentId: string): Promise<Document> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentViewPermission(documentId);
 
-    // Placeholder for database query
-    const document: Document | null = null;
+    // Query database for document
+    const { data: document, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
+
+    if (error) {
+      logger.error('Database error fetching document', { error, documentId });
+      throw new NotFoundError('Document not found');
+    }
 
     if (!document) {
-      throw new Error('Document not found');
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     // Log view action
     await logDocumentAction(documentId, 'view');
 
     logger.info('Document retrieved', { documentId, clinicId, userId: user.id });
-    return document;
+    return document as Document;
   } catch (error) {
     logger.error('Failed to get document', { error, documentId, clinicId, userId: user.id });
     throw error;
@@ -49,8 +63,8 @@ export async function getDocument(documentId: string): Promise<Document> {
 export async function getDocumentWithContext(documentId: string): Promise<{
   document: Document;
   versions?: Document[];
-  sharing?: any;
-  auditLogs?: any[];
+  sharing?: Record<string, unknown>;
+  auditLogs?: Record<string, unknown>[];
 }> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
@@ -60,12 +74,32 @@ export async function getDocumentWithContext(documentId: string): Promise<{
 
     const document = await getDocument(documentId);
 
-    // Placeholder for fetching related data
+    // Fetch related data
+    const supabase = getSupabaseClient();
+    const { data: versions } = await supabase
+      .from('document_versions')
+      .select('*')
+      .eq('document_id', documentId)
+      .order('created_at', { ascending: false });
+
+    const { data: sharing } = await supabase
+      .from('document_sharing')
+      .select('*')
+      .eq('document_id', documentId)
+      .single();
+
+    const { data: auditLogs } = await supabase
+      .from('document_audit_logs')
+      .select('*')
+      .eq('document_id', documentId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
     const context = {
       document,
-      versions: [],
-      sharing: null,
-      auditLogs: [],
+      versions: versions as Document[] || [],
+      sharing: sharing as Record<string, unknown> || null,
+      auditLogs: auditLogs as Record<string, unknown>[] || [],
     };
 
     logger.info('Document context retrieved', { documentId, clinicId, userId: user.id });
@@ -82,15 +116,27 @@ export async function getDocumentWithContext(documentId: string): Promise<{
 export async function documentExists(documentId: string): Promise<boolean> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
-    // Placeholder for database check
-    const exists = false;
+    const { data, error } = await supabase
+      .from('documents')
+      .select('id')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
+    if (error) {
+      logger.error('Database error checking document existence', { error, documentId });
+      return false;
+    }
+
+    const exists = !!data;
     logger.info('Document existence checked', { documentId, exists, clinicId, userId: user.id });
     return exists;
   } catch (error) {
     logger.error('Failed to check document existence', { error, documentId, clinicId, userId: user.id });
-    throw error;
+    return false;
   }
 }

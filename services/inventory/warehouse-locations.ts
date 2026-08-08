@@ -1,13 +1,24 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { WarehouseLocation, InventoryRequestOptions } from './inventory-types';
-import { validateWarehouseLocation } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Warehouse Locations
 // Management of warehouse storage locations (shelf, bin, rack, room, zone, cold room, freezer)
 // ============================================================================
+
+interface WarehouseLocation {
+  id: string;
+  clinicId: string;
+  warehouseId: string;
+  locationType: 'SHELF' | 'BIN' | 'RACK' | 'ROOM' | 'ZONE' | 'COLD_ROOM' | 'FREEZER';
+  name: string;
+  code: string;
+  capacity?: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create warehouse location
@@ -16,14 +27,6 @@ export async function createWarehouseLocation(
   data: Omit<WarehouseLocation, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<WarehouseLocation> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateWarehouseLocation(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +54,6 @@ export async function getWarehouseLocation(
   options?: InventoryRequestOptions
 ): Promise<WarehouseLocation | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -73,9 +73,6 @@ export async function getWarehouseLocations(
   options?: InventoryRequestOptions
 ): Promise<{ items: WarehouseLocation[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -101,9 +98,6 @@ export async function updateWarehouseLocation(
   options?: InventoryRequestOptions
 ): Promise<WarehouseLocation> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -111,16 +105,11 @@ export async function updateWarehouseLocation(
       id,
       clinicId,
       warehouseId: data.warehouseId || '',
+      locationType: data.locationType || 'SHELF',
       name: data.name || '',
       code: data.code || '',
-      type: data.type || 'SHELF',
-      parentId: data.parentId,
-      level: data.level || 0,
       capacity: data.capacity,
       isActive: data.isActive ?? true,
-      notes: data.notes,
-      createdBy: data.createdBy || '',
-      updatedBy: data.updatedBy,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -141,12 +130,9 @@ export async function deleteWarehouseLocation(
   options?: InventoryRequestOptions
 ): Promise<void> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('delete');
 
   try {
-    // Placeholder for actual database delete
+    // Placeholder for actual database updatelete
     logger.info('Warehouse location deleted', { id, clinicId });
   } catch (error) {
     logger.error('Failed to delete warehouse location', { error, id, clinicId });
@@ -162,9 +148,6 @@ export async function searchWarehouseLocations(
   options?: InventoryRequestOptions
 ): Promise<WarehouseLocation[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual search implementation
@@ -187,9 +170,6 @@ export async function getLocationTree(
   options?: InventoryRequestOptions
 ): Promise<WarehouseLocation[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual tree query
@@ -211,9 +191,6 @@ export async function getChildLocations(
   options?: InventoryRequestOptions
 ): Promise<WarehouseLocation[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query

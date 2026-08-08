@@ -534,30 +534,30 @@ export interface PrintableInvoice {
  * AI Extension Points (Placeholders)
  */
 export interface AIBillingExtensions {
-  revenueForecasting?: any;
-  pricingSuggestions?: any;
-  outstandingInvoicePrediction?: any;
-  billingErrorDetection?: any;
-  fraudDetection?: any;
-  insuranceClaimAssistance?: any;
-  financialInsights?: any;
+  revenueForecasting?: unknown;
+  pricingSuggestions?: unknown;
+  outstandingInvoicePrediction?: unknown;
+  billingErrorDetection?: unknown;
+  fraudDetection?: unknown;
+  insuranceClaimAssistance?: unknown;
+  financialInsights?: unknown;
 }
 
 /**
  * Future Integration Points (Placeholders)
  */
 export interface BillingIntegrations {
-  stripe?: any;
-  paypal?: any;
-  jazzCash?: any;
-  easyPaisa?: any;
-  bankAPIs?: any;
-  quickBooks?: any;
-  xero?: any;
-  insuranceAPIs?: any;
-  taxAPIs?: any;
-  governmentEInvoicing?: any;
-  fhirClaim?: any;
-  fhirInvoice?: any;
-  hl7FinancialMessages?: any;
+  stripe?: unknown;
+  paypal?: unknown;
+  jazzCash?: unknown;
+  easyPaisa?: unknown;
+  bankAPIs?: unknown;
+  quickBooks?: unknown;
+  xero?: unknown;
+  insuranceAPIs?: unknown;
+  taxAPIs?: unknown;
+  governmentEInvoicing?: unknown;
+  fhirClaim?: unknown;
+  fhirInvoice?: unknown;
+  hl7FinancialMessages?: unknown;
 }

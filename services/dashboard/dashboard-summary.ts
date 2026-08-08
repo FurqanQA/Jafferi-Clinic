@@ -116,6 +116,8 @@ function getDateRangeBoundaries(
   const now = new Date();
   const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  const dayOfWeek = now.getDay();
+  const currentQuarter = Math.floor(now.getMonth() / 3);
 
   switch (dateRange) {
     case DateRange.TODAY:
@@ -130,7 +132,6 @@ function getDateRangeBoundaries(
       };
 
     case DateRange.THIS_WEEK:
-      const dayOfWeek = now.getDay();
       const startOfWeek = new Date(now);
       startOfWeek.setDate(now.getDate() - dayOfWeek);
       startOfWeek.setHours(0, 0, 0, 0);
@@ -156,7 +157,6 @@ function getDateRangeBoundaries(
       return { start: lastMonthStart.toISOString(), end: lastMonthEnd.toISOString() };
 
     case DateRange.THIS_QUARTER:
-      const currentQuarter = Math.floor(now.getMonth() / 3);
       const startOfQuarter = new Date(now.getFullYear(), currentQuarter * 3, 1, 0, 0, 0, 0);
       return { start: startOfQuarter.toISOString(), end: endOfDay.toISOString() };
 
@@ -329,7 +329,7 @@ export async function getRoleSummary(role: string, dateRange: DateRange): Promis
   const summary = await generateDashboardSummary(dateRange);
 
   // Filter metrics based on role
-  const roleMetrics: Record<string, any> = {};
+  let roleMetrics: Record<string, any> = {};
 
   switch (role) {
     case 'owner':

@@ -27,7 +27,7 @@ export * from './file-download';
 export { 
   generatePreview, 
   getPreviewStatus, 
-  getThumbnailUrl as getFilePreviewThumbnailUrl
+  generateThumbnailUrl as getFilePreviewThumbnailUrl
 } from './file-preview';
 export * from './file-versioning';
 export * from './file-sharing';

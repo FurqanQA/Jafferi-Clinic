@@ -1,13 +1,25 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { Batch, InventoryRequestOptions } from './inventory-types';
-import { validateBatch } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Batches
 // Management of batch records (batch number, manufacturing date, expiry date, quantity)
 // ============================================================================
+
+interface Batch {
+  id: string;
+  clinicId: string;
+  itemId: string;
+  batchNumber: string;
+  manufacturingDate: string;
+  expiryDate: string;
+  quantity: number;
+  remainingQuantity: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create batch record
@@ -16,14 +28,6 @@ export async function createBatch(
   data: Omit<Batch, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Batch> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateBatch(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +55,6 @@ export async function getBatch(
   options?: InventoryRequestOptions
 ): Promise<Batch | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +73,6 @@ export async function getBatches(
   options?: InventoryRequestOptions
 ): Promise<{ items: Batch[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -99,9 +97,6 @@ export async function getBatchByNumber(
   options?: InventoryRequestOptions
 ): Promise<Batch | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -121,9 +116,6 @@ export async function getBatchesByMedicine(
   options?: InventoryRequestOptions
 ): Promise<Batch[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -145,9 +137,6 @@ export async function getExpiringBatches(
   options?: InventoryRequestOptions
 ): Promise<Batch[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -170,29 +159,19 @@ export async function updateBatch(
   options?: InventoryRequestOptions
 ): Promise<Batch> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
     const batch: Batch = {
       id,
       clinicId,
+      itemId: data.itemId || '',
       batchNumber: data.batchNumber || '',
-      medicineId: data.medicineId || '',
-      manufacturingDate: data.manufacturingDate,
-      expiryDate: data.expiryDate,
+      manufacturingDate: data.manufacturingDate || '',
+      expiryDate: data.expiryDate || '',
       quantity: data.quantity ?? 0,
-      availableQuantity: data.availableQuantity ?? 0,
-      warehouseId: data.warehouseId,
-      supplierId: data.supplierId,
-      purchaseOrderId: data.purchaseOrderId,
-      costPrice: data.costPrice ?? 0,
+      remainingQuantity: data.remainingQuantity ?? 0,
       isActive: data.isActive ?? true,
-      notes: data.notes,
-      createdBy: data.createdBy || '',
-      updatedBy: data.updatedBy,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

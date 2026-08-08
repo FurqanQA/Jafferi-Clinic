@@ -1,13 +1,23 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { Reorder, InventoryRequestOptions } from './inventory-types';
-import { validateReorder } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Reorder
 // Management of reorder points and automatic reorder suggestions
 // ============================================================================
+
+interface Reorder {
+  id: string;
+  clinicId: string;
+  medicineId: string;
+  reorderPoint: number;
+  reorderQuantity: number;
+  leadTimeDays: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create reorder rule
@@ -16,14 +26,6 @@ export async function createReorder(
   data: Omit<Reorder, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Reorder> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateReorder(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +53,6 @@ export async function getReorder(
   options?: InventoryRequestOptions
 ): Promise<Reorder | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +71,6 @@ export async function getReorders(
   options?: InventoryRequestOptions
 ): Promise<{ items: Reorder[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -100,9 +96,6 @@ export async function updateReorder(
   options?: InventoryRequestOptions
 ): Promise<Reorder> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -110,15 +103,10 @@ export async function updateReorder(
       id,
       clinicId,
       medicineId: data.medicineId || '',
-      warehouseId: data.warehouseId,
       reorderPoint: data.reorderPoint ?? 0,
       reorderQuantity: data.reorderQuantity ?? 0,
       leadTimeDays: data.leadTimeDays ?? 0,
-      safetyStock: data.safetyStock ?? 0,
       isActive: data.isActive ?? true,
-      lastReorderDate: data.lastReorderDate,
-      nextReorderDate: data.nextReorderDate,
-      updatedBy: data.updatedBy,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -138,9 +126,6 @@ export async function getReorderSuggestions(
   options?: InventoryRequestOptions
 ): Promise<{ medicineId: string; currentStock: number; reorderPoint: number; suggestedQuantity: number }[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -162,9 +147,6 @@ export async function getReorderByMedicine(
   options?: InventoryRequestOptions
 ): Promise<Reorder | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query

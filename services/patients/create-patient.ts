@@ -1,5 +1,5 @@
 import { getSupabaseClient } from '../core/client';
-import { DatabaseError } from '../core/errors';
+import { DatabaseError, NotFoundError, ConflictError } from '../core/errors';
 import { getUserClinicId } from '../core/auth';
 import { checkDuplicateEmail, checkDuplicatePhone } from '../core/duplicate-checker';
 import { logger } from '../shared/logger';
@@ -36,12 +36,12 @@ export async function createPatient(input: CreatePatientInput): Promise<Patient>
       .from('patients')
       .insert({
         clinic_id: clinicId,
-        medical_record_number: medicalRecordNumber,
+        patient_number: medicalRecordNumber,
         first_name: validatedInput.first_name,
         last_name: validatedInput.last_name,
         date_of_birth: validatedInput.date_of_birth,
         gender: validatedInput.gender,
-        blood_group: validatedInput.blood_group,
+        blood_type: validatedInput.blood_type,
         phone: validatedInput.phone,
         email: validatedInput.email || null,
         address: validatedInput.address || null,

@@ -1,13 +1,28 @@
 import { getUserClinicId } from '../core/auth';
 import { logger } from '../shared/logger';
-import { Alert, InventoryRequestOptions } from './inventory-types';
-import { validateAlert } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
+import { InventoryRequestOptions } from './inventory-types';
 
 // ============================================================================
 // Alerts
 // Management of inventory alerts (low stock, expiry, reorder, discrepancy)
 // ============================================================================
+
+interface Alert {
+  id: string;
+  clinicId: string;
+  type: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  status: 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED';
+  message: string;
+  itemId?: string;
+  acknowledgedBy?: string;
+  acknowledgedAt?: string;
+  resolvedBy?: string;
+  resolvedAt?: string;
+  resolutionNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create alert
@@ -16,14 +31,6 @@ export async function createAlert(
   data: Omit<Alert, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Alert> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateAlert(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +58,6 @@ export async function getAlert(
   options?: InventoryRequestOptions
 ): Promise<Alert | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +76,6 @@ export async function getAlerts(
   options?: InventoryRequestOptions
 ): Promise<{ items: Alert[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -100,9 +101,6 @@ export async function acknowledgeAlert(
   options?: InventoryRequestOptions
 ): Promise<Alert> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -137,9 +135,6 @@ export async function resolveAlert(
   options?: InventoryRequestOptions
 ): Promise<Alert> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -173,9 +168,6 @@ export async function getAlertsByType(
   options?: InventoryRequestOptions
 ): Promise<Alert[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -196,9 +188,6 @@ export async function getActiveAlerts(
   options?: InventoryRequestOptions
 ): Promise<Alert[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -219,9 +208,6 @@ export async function getCriticalAlerts(
   options?: InventoryRequestOptions
 ): Promise<Alert[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query

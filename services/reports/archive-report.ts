@@ -1,7 +1,9 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, DatabaseError } from '../core/errors';
 import { logger } from '../shared/logger';
 import { Report, ReportStatus } from './report-types';
 import { validateReportDeletePermission } from './report-permissions';
+import { getSupabaseClient } from '../core/client';
 
 // ============================================================================
 // Archive Report
@@ -14,27 +16,41 @@ import { validateReportDeletePermission } from './report-permissions';
 export async function archiveReport(reportId: string): Promise<Report> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateReportDeletePermission(reportId);
 
-    // Placeholder for fetching existing report
-    const existingReport: Report | null = null;
+    // Fetch existing report
+    const { data: existingReport, error: fetchError } = await supabase
+      .from('reports')
+      .select('*')
+      .eq('id', reportId)
+      .eq('clinic_id', clinicId)
+      .single();
 
-    if (!existingReport) {
-      throw new Error('Report not found');
+    if (fetchError || !existingReport) {
+      throw new NotFoundError('Report not found');
     }
 
-    const archivedReport: Report = {
-      ...existingReport,
-      status: ReportStatus.ARCHIVED,
-      updatedAt: new Date().toISOString(),
-    };
+    // Update report status
+    const { data: archivedReport, error: updateError } = await supabase
+      .from('reports')
+      .update({
+        status: ReportStatus.ARCHIVED,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', reportId)
+      .select()
+      .single();
 
-    // Placeholder for database update
+    if (updateError) {
+      throw new DatabaseError('Failed to archive report', { error: updateError });
+    }
+
     logger.info('Report archived', { reportId, clinicId, userId: user.id });
-    return archivedReport;
+    return archivedReport as Report;
   } catch (error) {
     logger.error('Failed to archive report', { error, reportId, clinicId, userId: user.id });
     throw error;

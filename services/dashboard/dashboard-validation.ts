@@ -133,8 +133,9 @@ export function validateDashboardRequest(options: unknown): DashboardRequestOpti
     return dashboardRequestOptionsSchema.parse(options);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      logger.error('Dashboard request validation failed', { errors: error.errors });
-      throw new ValidationError('Invalid dashboard request', { errors: error.errors });
+      const issues = (error as any).issues || (error as any).errors || [];
+      logger.error('Dashboard request validation failed', { errors: issues });
+      throw new ValidationError('Invalid dashboard request', { errors: issues });
     }
     throw error;
   }
@@ -147,7 +148,7 @@ export const analyticsRequestOptionsSchema = z.object({
   metric: z.string().min(1),
   aggregation: z.enum(['sum', 'count', 'average', 'min', 'max']).optional(),
   groupBy: z.string().optional(),
-  filters: z.record(z.any()).optional(),
+  filters: z.record(z.string(), z.any()).optional(),
   dateRange: z.nativeEnum(DateRange).optional(),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
@@ -165,8 +166,9 @@ export function validateAnalyticsRequest(options: unknown): AnalyticsRequestOpti
     return analyticsRequestOptionsSchema.parse(options);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      logger.error('Analytics request validation failed', { errors: error.errors });
-      throw new ValidationError('Invalid analytics request', { errors: error.errors });
+      const issues = (error as any).issues || (error as any).errors || [];
+      logger.error('Analytics request validation failed', { errors: issues });
+      throw new ValidationError('Invalid analytics request', { errors: issues });
     }
     throw error;
   }

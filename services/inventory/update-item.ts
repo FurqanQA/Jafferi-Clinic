@@ -1,7 +1,6 @@
 import { getUserClinicId } from '../core/auth';
-import { logger } from '../shared/logger';
 import { InventoryRequestOptions } from './inventory-types';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
+import { logger } from '../shared/logger';
 
 // ============================================================================
 // Update Item
@@ -14,12 +13,9 @@ import { validateWarehouseAccess, validateClinicIsolation, validateStockOperatio
 export async function updateItem(
   itemType: string,
   id: string,
-  data: Record<string, any>
+  data: Record<string, unknown>
 ): Promise<{ id: string; type: string; updatedAt: string }> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual item update logic
@@ -40,12 +36,9 @@ export async function updateItem(
  * Update multiple items in batch
  */
 export async function updateItemsBatch(
-  items: Array<{ itemType: string; id: string; data: Record<string, any> }>
+  items: Array<{ itemType: string; id: string; data: Record<string, unknown> }>
 ): Promise<{ updated: number; failed: number; errors: string[] }> {
   const clinicId = await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual batch update logic

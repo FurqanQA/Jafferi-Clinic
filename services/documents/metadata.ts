@@ -1,7 +1,9 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, AuthorizationError, DatabaseError } from '../core/errors';
 import { logger } from '../shared/logger';
 import { Document, DocumentMetadata } from './document-types';
 import { validateDocumentEditPermission } from './document-permissions';
+import { getSupabaseClient } from '../core/client';
 
 // ============================================================================
 // Metadata Service
@@ -17,34 +19,50 @@ export async function updateDocumentMetadata(
 ): Promise<Document> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentEditPermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
-    const updatedDocument: Document = {
-      ...document,
-      metadata: {
-        ...document.metadata,
-        ...metadata,
-      },
-      updatedAt: new Date().toISOString(),
-      updatedBy: user.id,
-    };
+    // Merge metadata
+    const existingMetadata = (document.metadata as DocumentMetadata) || {};
+    const updatedMetadata = { ...existingMetadata, ...metadata };
 
-    // Placeholder for database update
+    // Update document
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({
+        metadata: updatedMetadata,
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+      })
+      .eq('id', documentId)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw new DatabaseError('Failed to update document metadata', { error: updateError });
+    }
+
     logger.info('Document metadata updated', { 
       documentId, 
       metadataKeys: Object.keys(metadata), 
@@ -52,7 +70,7 @@ export async function updateDocumentMetadata(
       userId: user.id 
     });
 
-    return updatedDocument;
+    return updatedDocument as Document;
   } catch (error) {
     logger.error('Failed to update document metadata', { 
       error, 
@@ -70,22 +88,29 @@ export async function updateDocumentMetadata(
 export async function getDocumentMetadata(documentId: string): Promise<DocumentMetadata> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error } = await supabase
+      .from('documents')
+      .select('metadata, clinic_id')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (error || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     logger.info('Document metadata retrieved', { documentId, clinicId, userId: user.id });
-    return document.metadata || {};
+    return (document.metadata as DocumentMetadata) || {};
   } catch (error) {
     logger.error('Failed to get document metadata', { 
       error, 
@@ -127,37 +152,52 @@ export async function updateCustomField(
 ): Promise<Document> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentEditPermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
-    const customFields = document.metadata?.customFields || {};
+    const existingMetadata = (document.metadata as DocumentMetadata) || {};
+    const customFields = existingMetadata.customFields || {};
     customFields[fieldName] = fieldValue;
 
-    const updatedDocument: Document = {
-      ...document,
-      metadata: {
-        ...document.metadata,
-        customFields,
-      },
-      updatedAt: new Date().toISOString(),
-      updatedBy: user.id,
-    };
+    const updatedMetadata = { ...existingMetadata, customFields };
 
-    // Placeholder for database update
+    // Update document
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({
+        metadata: updatedMetadata,
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+      })
+      .eq('id', documentId)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw new DatabaseError('Failed to update custom field', { error: updateError });
+    }
+
     logger.info('Custom field updated', { 
       documentId, 
       fieldName, 
@@ -165,7 +205,7 @@ export async function updateCustomField(
       userId: user.id 
     });
 
-    return updatedDocument;
+    return updatedDocument as Document;
   } catch (error) {
     logger.error('Failed to update custom field', { 
       error, 
@@ -187,37 +227,52 @@ export async function deleteCustomField(
 ): Promise<Document> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentEditPermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
-    const customFields = document.metadata?.customFields || {};
+    const existingMetadata = (document.metadata as DocumentMetadata) || {};
+    const customFields = existingMetadata.customFields || {};
     delete customFields[fieldName];
 
-    const updatedDocument: Document = {
-      ...document,
-      metadata: {
-        ...document.metadata,
-        customFields,
-      },
-      updatedAt: new Date().toISOString(),
-      updatedBy: user.id,
-    };
+    const updatedMetadata = { ...existingMetadata, customFields };
 
-    // Placeholder for database update
+    // Update document
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({
+        metadata: updatedMetadata,
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+      })
+      .eq('id', documentId)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw new DatabaseError('Failed to delete custom field', { error: updateError });
+    }
+
     logger.info('Custom field deleted', { 
       documentId, 
       fieldName, 
@@ -225,7 +280,7 @@ export async function deleteCustomField(
       userId: user.id 
     });
 
-    return updatedDocument;
+    return updatedDocument as Document;
   } catch (error) {
     logger.error('Failed to delete custom field', { 
       error, 
@@ -247,20 +302,30 @@ export async function getDocumentsByMetadata(
 ): Promise<Document[]> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
-    // Placeholder for database query
-    const documents: Document[] = [];
+    // Query documents with matching metadata
+    const { data: documents, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .contains('metadata', { [fieldName]: fieldValue });
+
+    if (error) {
+      throw new DatabaseError('Failed to query documents by metadata', { error });
+    }
 
     logger.info('Documents retrieved by metadata', { 
       fieldName, 
       fieldValue, 
       clinicId, 
       userId: user.id, 
-      count: documents.length 
+      count: documents?.length || 0 
     });
 
-    return documents;
+    return (documents as Document[]) || [];
   } catch (error) {
     logger.error('Failed to get documents by metadata', { 
       error, 

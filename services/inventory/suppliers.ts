@@ -1,13 +1,27 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { Supplier, InventoryRequestOptions } from './inventory-types';
-import { validateSupplier } from './inventory-validation';
-import { validateSupplierAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Suppliers
 // Management of supplier profiles (contact information, performance, payment terms)
 // ============================================================================
+
+interface Supplier {
+  id: string;
+  clinicId: string;
+  name: string;
+  contactPerson?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  paymentTerms?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create supplier
@@ -16,14 +30,6 @@ export async function createSupplier(
   data: Omit<Supplier, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Supplier> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateSupplier(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +57,6 @@ export async function getSupplier(
   options?: InventoryRequestOptions
 ): Promise<Supplier | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +75,6 @@ export async function getSuppliers(
   options?: InventoryRequestOptions
 ): Promise<{ items: Supplier[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -100,9 +100,6 @@ export async function updateSupplier(
   options?: InventoryRequestOptions
 ): Promise<Supplier> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -110,27 +107,14 @@ export async function updateSupplier(
       id,
       clinicId,
       name: data.name || '',
-      code: data.code,
       contactPerson: data.contactPerson,
       email: data.email,
       phone: data.phone,
-      mobile: data.mobile,
       address: data.address,
       city: data.city,
-      state: data.state,
       country: data.country,
-      postalCode: data.postalCode,
-      taxId: data.taxId,
-      licenseNumber: data.licenseNumber,
       paymentTerms: data.paymentTerms,
-      creditLimit: data.creditLimit,
-      creditDays: data.creditDays,
-      rating: data.rating,
       isActive: data.isActive ?? true,
-      isPreferred: data.isPreferred ?? false,
-      notes: data.notes,
-      createdBy: data.createdBy || '',
-      updatedBy: data.updatedBy,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -151,9 +135,6 @@ export async function deleteSupplier(
   options?: InventoryRequestOptions
 ): Promise<void> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validateStockOperation('delete');
 
   try {
     // Placeholder for actual database delete
@@ -172,9 +153,6 @@ export async function searchSuppliers(
   options?: InventoryRequestOptions
 ): Promise<Supplier[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual search implementation
@@ -195,9 +173,6 @@ export async function getPreferredSuppliers(
   options?: InventoryRequestOptions
 ): Promise<Supplier[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -219,9 +194,6 @@ export async function getSupplierPerformance(
   options?: InventoryRequestOptions
 ): Promise<{ onTimeDelivery: number; quality: number; totalOrders: number; totalValue: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual performance calculation

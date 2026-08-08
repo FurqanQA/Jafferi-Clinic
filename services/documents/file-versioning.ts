@@ -1,8 +1,10 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, AuthorizationError, DatabaseError } from '../core/errors';
 import { logger } from '../shared/logger';
-import { Document, DocumentVersion } from './document-types';
+import { Document, DocumentVersion, StorageBucket } from './document-types';
 import { validateDocumentEditPermission } from './document-permissions';
 import { uploadToStorage, copyInStorage, calculateChecksum } from './storage';
+import { getSupabaseClient } from '../core/client';
 
 // ============================================================================
 // File Versioning Service
@@ -20,21 +22,28 @@ export async function createDocumentVersion(
 ): Promise<DocumentVersion> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentEditPermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     // Calculate checksum
@@ -44,31 +53,47 @@ export async function createDocumentVersion(
     const versionPath = `versions/${documentId}/${document.version + 1}/${fileName}`;
 
     // Upload version to storage
-    const { path } = await uploadToStorage(file, fileName, 'private' as any, `versions/${documentId}/${document.version + 1}`);
+    const { path } = await uploadToStorage(file, fileName, StorageBucket.PRIVATE, `versions/${documentId}/${document.version + 1}`);
 
     // Create version record
     const version: DocumentVersion = {
       id: crypto.randomUUID(),
-      documentId,
-      versionNumber: document.version + 1,
-      filePath: path,
-      fileName,
-      fileSize: file.length,
+      document_id: documentId,
+      version_number: document.version + 1,
+      file_path: path,
+      file_name: fileName,
+      file_size: file.length,
       checksum,
-      uploadedBy: user.id,
-      uploadedAt: new Date().toISOString(),
-      changeDescription,
+      uploaded_by: user.id,
+      uploaded_at: new Date().toISOString(),
+      change_description: changeDescription,
     };
 
-    // Placeholder for database insertion
+    // Insert version into database
+    const { data: insertedVersion, error: insertError } = await supabase
+      .from('document_versions')
+      .insert(version)
+      .select()
+      .single();
+
+    if (insertError) {
+      throw new DatabaseError('Failed to create document version', { error: insertError });
+    }
+
+    // Update document version
+    await supabase
+      .from('documents')
+      .update({ version: document.version + 1, current_version_id: insertedVersion.id })
+      .eq('id', documentId);
+
     logger.info('Document version created', { 
       documentId, 
-      versionNumber: version.versionNumber, 
+      versionNumber: version.version_number, 
       clinicId, 
       userId: user.id 
     });
 
-    return version;
+    return insertedVersion as DocumentVersion;
   } catch (error) {
     logger.error('Failed to create document version', { 
       error, 
@@ -150,46 +175,69 @@ export async function restoreDocumentVersion(
 ): Promise<Document> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentEditPermission(documentId);
 
-    // Placeholder for fetching document and version
-    const document: Document | null = null;
-    const version: DocumentVersion | null = null;
+    // Fetch document and version
+    const { data: document, error: docError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document || !version) {
-      throw new Error('Document or version not found');
+    const { data: version, error: versionError } = await supabase
+      .from('document_versions')
+      .select('*')
+      .eq('id', versionId)
+      .single();
+
+    if (docError || !document) {
+      throw new NotFoundError('Document not found');
+    }
+
+    if (versionError || !version) {
+      throw new NotFoundError('Version not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     // Copy version file to current location
-    await copyInStorage(version.filePath, document.filePath, 'private' as any);
+    await copyInStorage(version.file_path, document.file_path, StorageBucket.PRIVATE);
 
     // Update document with version details
-    const updatedDocument: Document = {
-      ...document,
-      version: version.versionNumber,
-      currentVersionId: versionId,
-      updatedAt: new Date().toISOString(),
-      updatedBy: user.id,
-    };
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({
+        version: version.version_number,
+        current_version_id: versionId,
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+      })
+      .eq('id', documentId)
+      .select()
+      .single();
 
-    // Placeholder for database update
+    if (updateError) {
+      throw new DatabaseError('Failed to restore document version', { error: updateError });
+    }
+
     logger.info('Document version restored', { 
       documentId, 
       versionId, 
-      versionNumber: version.versionNumber, 
+      versionNumber: version.version_number, 
       clinicId, 
       userId: user.id 
     });
 
-    return updatedDocument;
+    return updatedDocument as Document;
   } catch (error) {
     logger.error('Failed to restore document version', { 
       error, 
@@ -223,7 +271,7 @@ export async function compareDocumentVersions(
     const version2: DocumentVersion | null = null;
 
     if (!version1 || !version2) {
-      throw new Error('Version not found');
+      throw new NotFoundError('Version not found');
     }
 
     // Placeholder for comparison logic

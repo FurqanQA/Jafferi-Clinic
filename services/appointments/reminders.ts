@@ -34,7 +34,7 @@ export async function createAppointmentReminder(
       throw new DatabaseError('Appointment not found', { error });
     }
 
-    const apt = appointment as any;
+    const apt = appointment as Appointment;
 
     const payload: ReminderPayload = {
       type: reminderType,
@@ -44,18 +44,18 @@ export async function createAppointmentReminder(
       clinic_id: clinicId,
       scheduled_for: scheduledFor.toISOString(),
       data: {
-        patient_name: `${apt.patients.first_name} ${apt.patients.last_name}`,
-        patient_email: apt.patients.email,
-        patient_phone: apt.patients.phone,
-        doctor_name: `${apt.doctors.first_name} ${apt.doctors.last_name}`,
-        clinic_name: apt.clinics.name,
-        clinic_phone: apt.clinics.phone,
-        clinic_email: apt.clinics.email,
-        appointment_date: apt.appointment_date,
-        appointment_time: apt.start_time,
+        patient_name: apt.patients ? `${apt.patients.first_name} ${apt.patients.last_name}` : 'Unknown',
+        patient_email: apt.patients?.email,
+        patient_phone: apt.patients?.phone,
+        doctor_name: apt.doctors ? `${apt.doctors.first_name} ${apt.doctors.last_name}` : 'Unknown',
+        clinic_name: apt.clinics?.name,
+        clinic_phone: apt.clinics?.phone,
+        clinic_email: apt.clinics?.email,
+        appointment_date: apt.scheduled_date,
+        appointment_time: apt.scheduled_time,
         appointment_type: apt.appointment_type,
         appointment_number: apt.appointment_number,
-        reason_for_visit: apt.reason_for_visit,
+        reason_for_visit: apt.reason,
       },
     };
 
@@ -133,7 +133,7 @@ export async function scheduleReminder(
         appointment_id: appointmentId,
         reminder_type: reminderType,
         scheduled_for: scheduledFor.toISOString(),
-        payload: payload as any,
+        payload: payload as unknown, // JSONB column
         status: 'pending',
       });
 
@@ -161,7 +161,7 @@ export async function scheduleAppointmentReminders(appointmentId: string): Promi
     // Fetch appointment details
     const { data: appointment, error } = await supabase
       .from('appointments')
-      .select('appointment_date, start_time')
+      .select('scheduled_date, scheduled_time')
       .eq('id', appointmentId)
       .single();
 
@@ -169,8 +169,8 @@ export async function scheduleAppointmentReminders(appointmentId: string): Promi
       throw new DatabaseError('Appointment not found', { error });
     }
 
-    const apt = appointment as any;
-    const appointmentDateTime = new Date(`${apt.appointment_date}T${apt.start_time}`);
+    const apt = appointment as Appointment;
+    const appointmentDateTime = new Date(`${apt.scheduled_date}T${apt.scheduled_time}`);
 
     // Schedule confirmation reminder (immediately after booking)
     await scheduleReminder(appointmentId, 'confirmation_reminder', new Date());
@@ -250,7 +250,7 @@ export async function getPendingReminders(limit: number = 100): Promise<Reminder
       throw new DatabaseError('Failed to fetch pending reminders', { error });
     }
 
-    return (data || []).map((r: any) => r.payload as ReminderPayload);
+    return (data || []).map((r: { payload: ReminderPayload }) => r.payload);
   } catch (error) {
     if (error instanceof DatabaseError) {
       throw error;

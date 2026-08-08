@@ -1,5 +1,6 @@
 import { logger } from '../shared/logger';
 import { ApiError } from './api-types';
+import { z } from 'zod';
 
 // ============================================================================
 // API Errors
@@ -240,8 +241,9 @@ export function aggregateErrors(errors: Array<ApiError | ApiGatewayError>): ApiE
 /**
  * Create validation error from Zod error
  */
-export function createZodValidationError(zodError: any): ValidationError {
-  const field = zodError.errors?.[0]?.path?.join('.');
-  const message = zodError.errors?.[0]?.message || 'Validation failed';
+export function createZodValidationError(zodError: z.ZodError): ValidationError {
+  const issues = zodError.issues || (zodError as any).errors || [];
+  const field = issues[0]?.path?.join('.') || '';
+  const message = issues[0]?.message || 'Validation failed';
   return new ValidationError(message, field);
 }

@@ -1,6 +1,7 @@
 import { getUserRole, getUserClinicId } from '../core/auth';
 import { logger } from '../shared/logger';
 import { DocumentPermission, DocumentCategory } from './document-types';
+import { AuthorizationError } from '../core/errors';
 
 // ============================================================================
 // Document Permissions
@@ -144,7 +145,7 @@ export async function canAccessDocumentCategory(category: DocumentCategory): Pro
 export async function validateDocumentViewPermission(documentId?: string): Promise<void> {
   if (!(await hasDocumentPermission(DocumentPermission.VIEW))) {
     logger.warn('Unauthorized document view attempt', { documentId });
-    throw new Error('You do not have permission to view documents');
+    throw new AuthorizationError('You do not have permission to view documents');
   }
 }
 
@@ -154,7 +155,7 @@ export async function validateDocumentViewPermission(documentId?: string): Promi
 export async function validateDocumentDownloadPermission(documentId?: string): Promise<void> {
   if (!(await hasDocumentPermission(DocumentPermission.DOWNLOAD))) {
     logger.warn('Unauthorized document download attempt', { documentId });
-    throw new Error('You do not have permission to download documents');
+    throw new AuthorizationError('You do not have permission to download documents');
   }
 }
 
@@ -164,7 +165,7 @@ export async function validateDocumentDownloadPermission(documentId?: string): P
 export async function validateDocumentEditPermission(documentId?: string): Promise<void> {
   if (!(await hasDocumentPermission(DocumentPermission.EDIT))) {
     logger.warn('Unauthorized document edit attempt', { documentId });
-    throw new Error('You do not have permission to edit documents');
+    throw new AuthorizationError('You do not have permission to edit documents');
   }
 }
 
@@ -174,7 +175,7 @@ export async function validateDocumentEditPermission(documentId?: string): Promi
 export async function validateDocumentDeletePermission(documentId?: string): Promise<void> {
   if (!(await hasDocumentPermission(DocumentPermission.DELETE))) {
     logger.warn('Unauthorized document delete attempt', { documentId });
-    throw new Error('You do not have permission to delete documents');
+    throw new AuthorizationError('You do not have permission to delete documents');
   }
 }
 
@@ -184,7 +185,7 @@ export async function validateDocumentDeletePermission(documentId?: string): Pro
 export async function validateDocumentSharePermission(documentId?: string): Promise<void> {
   if (!(await hasDocumentPermission(DocumentPermission.SHARE))) {
     logger.warn('Unauthorized document share attempt', { documentId });
-    throw new Error('You do not have permission to share documents');
+    throw new AuthorizationError('You do not have permission to share documents');
   }
 }
 
@@ -194,7 +195,7 @@ export async function validateDocumentSharePermission(documentId?: string): Prom
 export async function validateDocumentAdminPermission(documentId?: string): Promise<void> {
   if (!(await hasDocumentPermission(DocumentPermission.ADMIN))) {
     logger.warn('Unauthorized document admin attempt', { documentId });
-    throw new Error('You do not have admin permission for documents');
+    throw new AuthorizationError('You do not have admin permission for documents');
   }
 }
 
@@ -204,7 +205,7 @@ export async function validateDocumentAdminPermission(documentId?: string): Prom
 export async function validateDocumentCategoryAccess(category: DocumentCategory): Promise<void> {
   if (!(await canAccessDocumentCategory(category))) {
     logger.warn('Unauthorized document category access attempt', { category });
-    throw new Error('You do not have permission to access this document category');
+    throw new AuthorizationError('You do not have permission to access this document category');
   }
 }
 
@@ -232,6 +233,6 @@ export async function isDocumentOwner(documentOwnerId: string): Promise<boolean>
 export async function validateDocumentOwnership(documentOwnerId: string): Promise<void> {
   if (!(await isDocumentOwner(documentOwnerId))) {
     logger.warn('Unauthorized document ownership access', { documentOwnerId });
-    throw new Error('You do not have permission to access this document');
+    throw new AuthorizationError('You do not have permission to access this document');
   }
 }

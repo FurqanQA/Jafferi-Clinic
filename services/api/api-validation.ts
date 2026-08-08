@@ -160,7 +160,7 @@ export const paginationOptionsSchema = z.object({
 /**
  * Filter options schema
  */
-export const filterOptionsSchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.array(z.any())]));
+export const filterOptionsSchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.array(z.unknown())]));
 
 /**
  * SDK generation config schema
@@ -182,7 +182,7 @@ export const apiRequestSchema = z.object({
   path: z.string(),
   headers: z.record(z.string(), z.string()).optional(),
   query: z.record(z.string(), z.string()).optional(),
-  body: z.any().optional(),
+  body: z.unknown().optional(),
 });
 
 /**

@@ -1,5 +1,7 @@
 import { getSupabaseClient } from '../core/client';
 import { logger } from '../shared/logger';
+import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, AuthorizationError, DatabaseError, UploadError } from '../core/errors';
 import { StorageBucket, FileFormat } from './document-types';
 
 // ============================================================================
@@ -41,7 +43,7 @@ export async function uploadToStorage(
       });
 
     if (error) {
-      throw new Error(`Storage upload failed: ${error.message}`);
+      throw new UploadError(`Storage upload failed: ${error.message}`);
     }
 
     const { data: { publicUrl } } = supabase.storage
@@ -72,7 +74,7 @@ export async function downloadFromStorage(
       .download(path);
 
     if (error) {
-      throw new Error(`Storage download failed: ${error.message}`);
+      throw new UploadError(`Storage download failed: ${error.message}`);
     }
 
     logger.info('File downloaded from storage', { path, bucket: bucketName });
@@ -99,7 +101,7 @@ export async function deleteFromStorage(
       .remove([path]);
 
     if (error) {
-      throw new Error(`Storage deletion failed: ${error.message}`);
+      throw new UploadError(`Storage deletion failed: ${error.message}`);
     }
 
     logger.info('File deleted from storage', { path, bucket: bucketName });
@@ -126,7 +128,7 @@ export async function moveInStorage(
       .move(fromPath, toPath);
 
     if (error) {
-      throw new Error(`Storage move failed: ${error.message}`);
+      throw new UploadError(`Storage move failed: ${error.message}`);
     }
 
     logger.info('File moved in storage', { fromPath, toPath, bucket: bucketName });
@@ -153,7 +155,7 @@ export async function copyInStorage(
       .copy(fromPath, toPath);
 
     if (error) {
-      throw new Error(`Storage copy failed: ${error.message}`);
+      throw new UploadError(`Storage copy failed: ${error.message}`);
     }
 
     logger.info('File copied in storage', { fromPath, toPath, bucket: bucketName });

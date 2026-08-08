@@ -26,12 +26,14 @@ export async function restoreReport(reportId: string): Promise<Report> {
       throw new Error('Report not found');
     }
 
-    if (existingReport.status !== ReportStatus.ARCHIVED) {
+    const report = existingReport as Report;
+
+    if (report.status !== ReportStatus.ARCHIVED) {
       throw new Error('Report is not archived');
     }
 
     const restoredReport: Report = {
-      ...existingReport,
+      ...report,
       status: ReportStatus.DRAFT,
       updatedAt: new Date().toISOString(),
     };

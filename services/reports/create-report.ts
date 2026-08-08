@@ -1,7 +1,9 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, DatabaseError } from '../core/errors';
 import { logger } from '../shared/logger';
 import { Report, ReportCategory, ReportType, ReportStatus, ReportTemplate, ScheduleFrequency } from './report-types';
 import { validateReportCategoryAccess } from './report-permissions';
+import { getSupabaseClient } from '../core/client';
 
 // ============================================================================
 // Create Report
@@ -49,13 +51,19 @@ export async function createReportFromTemplate(
 ): Promise<Report> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
-    // Placeholder for fetching template
-    const template: ReportTemplate | null = null;
+    // Fetch template
+    const { data: template, error: fetchError } = await supabase
+      .from('report_templates')
+      .select('*')
+      .eq('id', templateId)
+      .eq('clinic_id', clinicId)
+      .single();
 
-    if (!template) {
-      throw new Error('Template not found');
+    if (fetchError || !template) {
+      throw new NotFoundError('Template not found');
     }
 
     // Check permissions
@@ -84,9 +92,19 @@ export async function createReportFromTemplate(
       updatedAt: new Date().toISOString(),
     };
 
-    // Placeholder for database insertion
+    // Insert report into database
+    const { data: insertedReport, error: insertError } = await supabase
+      .from('reports')
+      .insert(report)
+      .select()
+      .single();
+
+    if (insertError) {
+      throw new DatabaseError('Failed to create report from template', { error: insertError });
+    }
+
     logger.info('Report created from template', { reportId: report.id, templateId, clinicId, userId: user.id });
-    return report;
+    return insertedReport as Report;
   } catch (error) {
     logger.error('Failed to create report from template', { error, templateId, clinicId, userId: user.id });
     throw error;

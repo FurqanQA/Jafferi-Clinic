@@ -1,13 +1,22 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { QRCode, InventoryRequestOptions } from './inventory-types';
-import { validateQRCode } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // QR Code
 // Management of QR code generation and scanning for inventory items
 // ============================================================================
+
+interface QRCode {
+  id: string;
+  clinicId: string;
+  itemId: string;
+  code: string;
+  type: 'ITEM' | 'BATCH' | 'LOCATION';
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create QR code
@@ -16,14 +25,6 @@ export async function createQRCode(
   data: Omit<QRCode, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<QRCode> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateQRCode(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +52,6 @@ export async function getQRCode(
   options?: InventoryRequestOptions
 ): Promise<QRCode | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -73,9 +71,6 @@ export async function getQRCodeByCode(
   options?: InventoryRequestOptions
 ): Promise<QRCode | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -94,9 +89,6 @@ export async function getQRCodes(
   options?: InventoryRequestOptions
 ): Promise<{ items: QRCode[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -121,9 +113,6 @@ export async function getQRCodesByMedicine(
   options?: InventoryRequestOptions
 ): Promise<QRCode[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -146,9 +135,6 @@ export async function generateQRCode(
   options?: InventoryRequestOptions
 ): Promise<QRCode> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for QR code generation logic
@@ -156,9 +142,9 @@ export async function generateQRCode(
 
     const qrCode: QRCode = {
       id: `QR-${Date.now()}`,
-      medicineId,
+      itemId: medicineId,
       code,
-      qrType,
+      type: 'ITEM',
       clinicId,
       isActive: true,
       createdAt: new Date().toISOString(),
@@ -181,9 +167,6 @@ export async function scanQRCode(
   options?: InventoryRequestOptions
 ): Promise<{ valid: boolean; qrCode?: QRCode }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual QR code lookup

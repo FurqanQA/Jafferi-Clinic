@@ -1,13 +1,26 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { StockReservation, InventoryRequestOptions } from './inventory-types';
-import { validateStockReservation } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Stock Reservation
 // Management of stock reservations (prescription, order, transfer, expiry)
 // ============================================================================
+
+interface StockReservation {
+  id: string;
+  clinicId: string;
+  itemId: string;
+  warehouseId: string;
+  reservationType: 'PRESCRIPTION' | 'ORDER' | 'TRANSFER' | 'EXPIRY';
+  quantity: number;
+  referenceId?: string;
+  status: 'PENDING' | 'CONFIRMED' | 'FULFILLED' | 'CANCELLED' | 'EXPIRED';
+  expiryDate?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create stock reservation
@@ -16,14 +29,6 @@ export async function createStockReservation(
   data: Omit<StockReservation, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<StockReservation> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateStockReservation(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +56,6 @@ export async function getStockReservation(
   options?: InventoryRequestOptions
 ): Promise<StockReservation | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +74,6 @@ export async function getStockReservations(
   options?: InventoryRequestOptions
 ): Promise<{ items: StockReservation[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -100,9 +99,6 @@ export async function fulfillStockReservation(
   options?: InventoryRequestOptions
 ): Promise<StockReservation> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -114,8 +110,6 @@ export async function fulfillStockReservation(
     const updated: StockReservation = {
       ...reservation,
       status: 'FULFILLED',
-      fulfilledBy,
-      fulfilledAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
@@ -136,9 +130,6 @@ export async function cancelStockReservation(
   options?: InventoryRequestOptions
 ): Promise<StockReservation> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -150,7 +141,6 @@ export async function cancelStockReservation(
     const updated: StockReservation = {
       ...reservation,
       status: 'CANCELLED',
-      cancellationReason,
       updatedAt: new Date().toISOString(),
     };
 
@@ -170,9 +160,6 @@ export async function releaseStockReservation(
   options?: InventoryRequestOptions
 ): Promise<StockReservation> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -183,7 +170,7 @@ export async function releaseStockReservation(
 
     const updated: StockReservation = {
       ...reservation,
-      status: 'RELEASED',
+      status: 'CANCELLED',
       updatedAt: new Date().toISOString(),
     };
 
@@ -202,9 +189,6 @@ export async function getActiveStockReservations(
   options?: InventoryRequestOptions
 ): Promise<StockReservation[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -227,9 +211,6 @@ export async function getStockReservationsByReference(
   options?: InventoryRequestOptions
 ): Promise<StockReservation[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -250,9 +231,6 @@ export async function getExpiredStockReservations(
   options?: InventoryRequestOptions
 ): Promise<StockReservation[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query

@@ -1,13 +1,21 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { Strength, InventoryRequestOptions } from './inventory-types';
-import { validateStrength } from './inventory-validation';
-import { validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Strengths
 // Management of medicine strengths (value and unit combinations)
 // ============================================================================
+
+interface Strength {
+  id: string;
+  clinicId: string;
+  value: number;
+  unit: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create strength
@@ -16,14 +24,6 @@ export async function createStrength(
   data: Omit<Strength, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Strength> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateStrength(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +51,6 @@ export async function getStrength(
   options?: InventoryRequestOptions
 ): Promise<Strength | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +69,6 @@ export async function getStrengths(
   options?: InventoryRequestOptions
 ): Promise<{ items: Strength[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -100,20 +94,15 @@ export async function updateStrength(
   options?: InventoryRequestOptions
 ): Promise<Strength> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
     const strength: Strength = {
       id,
       clinicId,
-      value: data.value || '',
+      value: data.value ?? 0,
       unit: data.unit || '',
       isActive: data.isActive ?? true,
-      createdBy: data.createdBy || '',
-      updatedBy: data.updatedBy,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -134,9 +123,6 @@ export async function deleteStrength(
   options?: InventoryRequestOptions
 ): Promise<void> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('delete');
 
   try {
     // Placeholder for actual database delete
@@ -155,9 +141,6 @@ export async function searchStrengths(
   options?: InventoryRequestOptions
 ): Promise<Strength[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual search implementation

@@ -16,19 +16,23 @@ export type AppointmentStatus =
   | 'rescheduled';
 
 /**
- * Appointment type
+ * Appointment type - matches database appointment_type_enum
  */
 export type AppointmentType = 
-  | 'general_consultation'
+  | 'consultation'
   | 'follow_up'
   | 'emergency'
-  | 'procedure'
-  | 'vaccination'
-  | 'laboratory'
-  | 'telemedicine'
-  | 'walk_in'
-  | 'routine_checkup'
-  | 'specialist_consultation';
+  | 'procedure';
+
+/**
+ * Payment method - matches database payment_method_enum
+ */
+export type PaymentMethod = 
+  | 'cash'
+  | 'card'
+  | 'insurance'
+  | 'transfer'
+  | 'check';
 
 /**
  * Visit type
@@ -76,85 +80,141 @@ export interface DailyAvailability {
 }
 
 /**
- * Appointment data
+ * Calendar/agenda query result (subset of Appointment with joined relations)
+ */
+export interface CalendarAppointment {
+  id: string;
+  appointment_date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  color_tag?: string;
+  patient_id: string;
+  doctor_id: string;
+  appointment_number?: string;
+  duration_minutes?: number;
+  appointment_type?: string;
+  visit_type?: string;
+  priority?: string;
+  reason?: string;
+  source?: string;
+  created_at?: string;
+  patients: {
+    first_name: string;
+    last_name: string;
+  }[];
+  doctors: {
+    first_name: string;
+    last_name: string;
+  }[];
+  departments?: {
+    name?: string;
+  }[];
+}
+
+/**
+ * Appointment data - matches database schema
  */
 export interface Appointment {
   id: string;
   clinic_id: string;
   patient_id: string;
   doctor_id: string;
-  department_id?: string;
   appointment_number: string;
-  appointment_date: string;
-  start_time: string;
+  status_id: string;
+  scheduled_date: string;
+  scheduled_time: string;
   end_time: string;
-  duration: number; // in minutes
+  duration_minutes: number;
   appointment_type: AppointmentType;
-  visit_type: VisitType;
-  priority: Priority;
-  status: AppointmentStatus;
-  reason_for_visit?: string;
+  reason?: string;
   symptoms?: string;
   notes?: string;
-  internal_notes?: string;
-  color_tag?: string;
-  source: AppointmentSource;
-  created_by?: string;
-  updated_by?: string;
-  confirmed_at?: string;
-  checked_in_at?: string;
-  started_at?: string;
-  completed_at?: string;
-  cancelled_at?: string;
+  is_virtual: boolean;
+  virtual_meeting_link?: string;
+  fee?: number;
+  is_paid: boolean;
+  payment_method?: PaymentMethod;
+  reminder_sent: boolean;
+  reminder_sent_at?: string;
+  check_in_time?: string;
+  start_time?: string;
+  end_time_actual?: string;
+  no_show: boolean;
   cancellation_reason?: string;
-  rescheduled_from_id?: string;
-  rescheduled_to_id?: string;
-  is_active: boolean;
-  deleted_at: string | null;
+  cancelled_by?: string;
+  cancelled_at?: string;
   created_at: string;
   updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+  deleted_at: string | null;
+  // Additional fields from database
+  appointment_date?: string;
+  status?: string;
+  color_tag?: string;
+  visit_type?: VisitType;
+  priority?: Priority;
+  source?: AppointmentSource;
+  // Joined relations
+  patients?: {
+    first_name: string;
+    last_name: string;
+    email?: string;
+    phone?: string;
+  };
+  doctors?: {
+    first_name: string;
+    last_name: string;
+  };
+  clinics?: {
+    name: string;
+    phone?: string;
+    email?: string;
+  };
+  departments?: {
+    name?: string;
+  };
 }
 
 /**
- * Create appointment input
+ * Create appointment input - matches database schema
  */
 export interface CreateAppointmentInput {
   patient_id: string;
   doctor_id: string;
-  department_id?: string;
-  appointment_date: string;
-  start_time: string;
-  end_time: string;
-  duration: number;
+  scheduled_date: string;
+  scheduled_time: string;
+  end_time?: string;
+  duration_minutes: number;
   appointment_type: AppointmentType;
-  visit_type: VisitType;
-  priority: Priority;
-  reason_for_visit?: string;
+  reason?: string;
   symptoms?: string;
   notes?: string;
-  internal_notes?: string;
-  color_tag?: string;
-  source?: AppointmentSource;
+  is_virtual?: boolean;
+  virtual_meeting_link?: string;
+  fee?: number;
+  payment_method?: PaymentMethod;
 }
 
 /**
- * Update appointment input
+ * Update appointment input - matches database schema
  */
 export interface UpdateAppointmentInput {
   doctor_id?: string;
-  department_id?: string;
-  appointment_date?: string;
-  start_time?: string;
+  scheduled_date?: string;
+  scheduled_time?: string;
   end_time?: string;
-  duration?: number;
+  duration_minutes?: number;
   appointment_type?: AppointmentType;
-  visit_type?: VisitType;
-  priority?: Priority;
-  reason_for_visit?: string;
+  reason?: string;
   symptoms?: string;
   notes?: string;
-  internal_notes?: string;
-  color_tag?: string;
+  is_virtual?: boolean;
+  virtual_meeting_link?: string;
+  fee?: number;
+  is_paid?: boolean;
+  payment_method?: PaymentMethod;
 }
 
 /**

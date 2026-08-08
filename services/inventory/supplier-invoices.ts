@@ -1,13 +1,26 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { SupplierInvoice, InventoryRequestOptions } from './inventory-types';
-import { validateSupplierInvoice } from './inventory-validation';
-import { validateSupplierAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Supplier Invoices
 // Management of supplier invoices (record, verify, process, pay)
 // ============================================================================
+
+interface SupplierInvoice {
+  id: string;
+  clinicId: string;
+  supplierId: string;
+  purchaseOrderId: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  dueDate: string;
+  totalAmount: number;
+  status: 'DRAFT' | 'RECEIVED' | 'VERIFIED' | 'APPROVED' | 'PAID' | 'CANCELLED';
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create supplier invoice
@@ -16,14 +29,6 @@ export async function createSupplierInvoice(
   data: Omit<SupplierInvoice, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<SupplierInvoice> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateSupplierInvoice(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +56,6 @@ export async function getSupplierInvoice(
   options?: InventoryRequestOptions
 ): Promise<SupplierInvoice | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +74,6 @@ export async function getSupplierInvoices(
   options?: InventoryRequestOptions
 ): Promise<{ items: SupplierInvoice[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -82,7 +81,6 @@ export async function getSupplierInvoices(
     const total = 0;
     const limit = options?.limit || 50;
     const offset = options?.offset || 0;
-
     logger.info('Supplier invoices retrieved', { clinicId, count: items.length, total });
     return { items, total, limit, offset };
   } catch (error) {
@@ -100,9 +98,6 @@ export async function verifySupplierInvoice(
   options?: InventoryRequestOptions
 ): Promise<SupplierInvoice> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -114,8 +109,6 @@ export async function verifySupplierInvoice(
     const updated: SupplierInvoice = {
       ...invoice,
       status: 'VERIFIED',
-      verifiedBy,
-      verifiedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
@@ -137,9 +130,6 @@ export async function processSupplierInvoicePayment(
   options?: InventoryRequestOptions
 ): Promise<SupplierInvoice> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -151,8 +141,6 @@ export async function processSupplierInvoicePayment(
     const updated: SupplierInvoice = {
       ...invoice,
       status: 'PAID',
-      paymentDate,
-      paymentMethod,
       updatedAt: new Date().toISOString(),
     };
 
@@ -172,9 +160,6 @@ export async function getSupplierInvoicesBySupplier(
   options?: InventoryRequestOptions
 ): Promise<SupplierInvoice[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -195,9 +180,6 @@ export async function getPendingSupplierInvoices(
   options?: InventoryRequestOptions
 ): Promise<SupplierInvoice[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query

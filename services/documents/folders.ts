@@ -1,7 +1,9 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, AuthorizationError, DatabaseError, ConflictError } from '../core/errors';
 import { logger } from '../shared/logger';
 import { Folder } from './document-types';
 import { validateDocumentEditPermission } from './document-permissions';
+import { getSupabaseClient } from '../core/client';
 
 // ============================================================================
 // Folders Service
@@ -18,6 +20,7 @@ export async function createFolder(
 ): Promise<Folder> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
@@ -32,21 +35,31 @@ export async function createFolder(
 
     const folder: Folder = {
       id: crypto.randomUUID(),
-      clinicId,
-      parentId,
+      clinic_id: clinicId,
+      parent_id: parentId,
       name,
       path,
       description,
-      isSystem: false,
-      documentCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      createdBy: user.id,
+      is_system: false,
+      document_count: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      created_by: user.id,
     };
 
-    // Placeholder for database insertion
+    // Insert into database
+    const { data, error } = await supabase
+      .from('document_folders')
+      .insert(folder)
+      .select()
+      .single();
+
+    if (error) {
+      throw new DatabaseError('Failed to create folder', { error });
+    }
+
     logger.info('Folder created', { folderId: folder.id, clinicId, userId: user.id });
-    return folder;
+    return data as Folder;
   } catch (error) {
     logger.error('Failed to create folder', { error, name, parentId, clinicId, userId: user.id });
     throw error;
@@ -59,22 +72,27 @@ export async function createFolder(
 export async function getFolder(folderId: string): Promise<Folder> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
-    // Placeholder for database query
-    const folder: Folder | null = null;
+    const { data: folder, error } = await supabase
+      .from('document_folders')
+      .select('*')
+      .eq('id', folderId)
+      .eq('clinic_id', clinicId)
+      .single();
 
-    if (!folder) {
-      throw new Error('Folder not found');
+    if (error || !folder) {
+      throw new NotFoundError('Folder not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (folder.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (folder.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     logger.info('Folder retrieved', { folderId, clinicId, userId: user.id });
-    return folder;
+    return folder as Folder;
   } catch (error) {
     logger.error('Failed to get folder', { error, folderId, clinicId, userId: user.id });
     throw error;
@@ -85,18 +103,34 @@ export async function getFolder(folderId: string): Promise<Folder> {
  * Get all folders for a clinic
  */
 export async function getFolders(options?: {
-  parentId?: string;
-  includeSystem?: boolean;
+  parent_id?: string;
+  include_system?: boolean;
 }): Promise<Folder[]> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
-    // Placeholder for database query
-    const folders: Folder[] = [];
+    const { data: folders, error } = await supabase
+      .from('document_folders')
+      .select('*')
+      .eq('clinic_id', clinicId);
 
-    logger.info('Folders retrieved', { clinicId, userId: user.id, options, count: folders.length });
-    return folders;
+    if (error) {
+      throw new DatabaseError('Failed to fetch folders', { error });
+    }
+
+    // Apply filters
+    let filteredFolders = (folders as Folder[]) || [];
+    if (options?.parent_id) {
+      filteredFolders = filteredFolders.filter(f => f.parent_id === options.parent_id);
+    }
+    if (options?.include_system === false) {
+      filteredFolders = filteredFolders.filter(f => !f.is_system);
+    }
+
+    logger.info('Folders retrieved', { clinicId, userId: user.id, options, count: filteredFolders.length });
+    return filteredFolders;
   } catch (error) {
     logger.error('Failed to get folders', { error, clinicId, userId: user.id, options });
     throw error;
@@ -108,10 +142,11 @@ export async function getFolders(options?: {
  */
 export async function updateFolder(
   folderId: string,
-  updates: Partial<Pick<Folder, 'name' | 'description' | 'parentId'>>
+  updates: Partial<Pick<Folder, 'name' | 'description' | 'parent_id'>>
 ): Promise<Folder> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
@@ -119,32 +154,41 @@ export async function updateFolder(
 
     const existingFolder = await getFolder(folderId);
 
-    if (existingFolder.isSystem) {
-      throw new Error('Cannot modify system folders');
+    if (existingFolder.is_system) {
+      throw new AuthorizationError('Cannot modify system folders');
     }
 
     // Recalculate path if parent changed
     let path = existingFolder.path;
-    if (updates.parentId && updates.parentId !== existingFolder.parentId) {
-      const parentFolder = await getFolder(updates.parentId);
+    if (updates.parent_id && updates.parent_id !== existingFolder.parent_id) {
+      const parentFolder = await getFolder(updates.parent_id);
       path = `${parentFolder.path}/${existingFolder.name}`;
     } else if (updates.name && updates.name !== existingFolder.name) {
-      const parentPath = existingFolder.parentId 
-        ? (await getFolder(existingFolder.parentId)).path 
+      const parentPath = existingFolder.parent_id 
+        ? (await getFolder(existingFolder.parent_id)).path 
         : '';
       path = parentPath ? `${parentPath}/${updates.name}` : updates.name;
     }
 
-    const updatedFolder: Folder = {
-      ...existingFolder,
-      ...updates,
-      path,
-      updatedAt: new Date().toISOString(),
-    };
+    const { data: updatedFolder, error } = await supabase
+      .from('document_folders')
+      .update({
+        name: updates.name,
+        description: updates.description,
+        parent_id: updates.parent_id,
+        path,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', folderId)
+      .select()
+      .single();
 
-    // Placeholder for database update
+    if (error) {
+      throw new DatabaseError('Failed to update folder', { error });
+    }
+
     logger.info('Folder updated', { folderId, clinicId, userId: user.id });
-    return updatedFolder;
+    return updatedFolder as Folder;
   } catch (error) {
     logger.error('Failed to update folder', { error, folderId, clinicId, userId: user.id });
     throw error;
@@ -157,6 +201,7 @@ export async function updateFolder(
 export async function deleteFolder(folderId: string): Promise<void> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
@@ -164,15 +209,23 @@ export async function deleteFolder(folderId: string): Promise<void> {
 
     const folder = await getFolder(folderId);
 
-    if (folder.isSystem) {
-      throw new Error('Cannot delete system folders');
+    if (folder.is_system) {
+      throw new AuthorizationError('Cannot delete system folders');
     }
 
-    if (folder.documentCount > 0) {
-      throw new Error('Cannot delete folder with documents. Move or delete documents first.');
+    if (folder.document_count > 0) {
+      throw new ConflictError('Cannot delete folder with documents. Move or delete documents first.');
     }
 
-    // Placeholder for database deletion
+    const { error } = await supabase
+      .from('document_folders')
+      .delete()
+      .eq('id', folderId);
+
+    if (error) {
+      throw new DatabaseError('Failed to delete folder', { error });
+    }
+
     logger.info('Folder deleted', { folderId, clinicId, userId: user.id });
   } catch (error) {
     logger.error('Failed to delete folder', { error, folderId, clinicId, userId: user.id });
@@ -223,16 +276,16 @@ export async function initializeSystemFolders(): Promise<Folder[]> {
     for (const folderDef of systemFolders) {
       const folder: Folder = {
         id: crypto.randomUUID(),
-        clinicId,
-        parentId: undefined,
+        clinic_id: clinicId,
+        parent_id: undefined,
         name: folderDef.name,
         path: folderDef.name,
         description: folderDef.description,
-        isSystem: true,
-        documentCount: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        createdBy: user.id,
+        is_system: true,
+        document_count: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: user.id,
       };
 
       // Placeholder for database insertion

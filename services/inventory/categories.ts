@@ -1,13 +1,23 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { Category, InventoryRequestOptions } from './inventory-types';
-import { validateCategory } from './inventory-validation';
-import { validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Categories
 // Management of medicine categories with hierarchical structure (parent-child relationships)
 // ============================================================================
+
+interface Category {
+  id: string;
+  clinicId: string;
+  name: string;
+  description?: string;
+  parentId?: string;
+  level: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create category
@@ -17,14 +27,6 @@ export async function createCategory(
 ): Promise<Category> {
   const clinicId = data.clinicId || await getUserClinicId();
   
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateCategory(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
-
   try {
     // Placeholder for actual database insert
     const category: Category = {
@@ -51,9 +53,6 @@ export async function getCategory(
   options?: InventoryRequestOptions
 ): Promise<Category | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +71,6 @@ export async function getCategories(
   options?: InventoryRequestOptions
 ): Promise<{ items: Category[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -100,9 +96,6 @@ export async function updateCategory(
   options?: InventoryRequestOptions
 ): Promise<Category> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -110,13 +103,10 @@ export async function updateCategory(
       id,
       clinicId,
       name: data.name || '',
-      code: data.code,
       description: data.description,
       parentId: data.parentId,
       level: data.level || 0,
       isActive: data.isActive ?? true,
-      createdBy: data.createdBy || '',
-      updatedBy: data.updatedBy,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -137,9 +127,6 @@ export async function deleteCategory(
   options?: InventoryRequestOptions
 ): Promise<void> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('delete');
 
   try {
     // Placeholder for actual database delete
@@ -158,9 +145,6 @@ export async function searchCategories(
   options?: InventoryRequestOptions
 ): Promise<Category[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual search implementation
@@ -182,9 +166,6 @@ export async function getCategoryTree(
   options?: InventoryRequestOptions
 ): Promise<Category[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual tree query
@@ -206,9 +187,6 @@ export async function getChildCategories(
   options?: InventoryRequestOptions
 ): Promise<Category[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query

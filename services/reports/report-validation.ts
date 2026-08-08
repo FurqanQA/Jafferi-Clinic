@@ -64,7 +64,7 @@ export const ReportSchema = z.object({
   clinicId: z.string().min(1, 'Clinic ID is required'),
   createdBy: z.string().min(1, 'Created by is required'),
   updatedBy: z.string().optional(),
-  parameters: z.record(z.any()),
+  parameters: z.record(z.string(), z.any()),
   filters: z.array(ReportFilterSchema),
   columns: z.array(ReportColumnSchema).min(1, 'At least one column is required'),
   groupBy: z.array(z.string()).optional(),
@@ -86,7 +86,7 @@ export const ReportTemplateSchema = z.object({
   type: z.nativeEnum(ReportType),
   isSystemTemplate: z.boolean(),
   createdBy: z.string().min(1, 'Created by is required'),
-  parameters: z.record(z.any()),
+  parameters: z.record(z.string(), z.any()),
   filters: z.array(ReportFilterSchema),
   columns: z.array(ReportColumnSchema).min(1, 'At least one column is required'),
   groupBy: z.array(z.string()).optional(),
@@ -125,7 +125,7 @@ export const AnalyticsDataPointSchema = z.object({
   timestamp: z.string().min(1, 'Timestamp is required'),
   value: z.number(),
   label: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 /**
@@ -138,7 +138,7 @@ export const TrendAnalysisSchema = z.object({
   trend: z.enum(['increasing', 'decreasing', 'stable', 'volatile']),
   growthRate: z.number(),
   forecast: z.array(AnalyticsDataPointSchema).optional(),
-  seasonality: z.record(z.number()).optional(),
+  seasonality: z.record(z.string(), z.number()).optional(),
 });
 
 /**

@@ -22,7 +22,8 @@ export type ResourceType =
   | 'users'
   | 'medical_records'
   | 'prescriptions'
-  | 'laboratory';
+  | 'laboratory'
+  | 'inventory';
 
 /**
  * Role permissions mapping
@@ -73,7 +74,7 @@ export function canWrite(role: UserRole, resource: ResourceType): boolean {
   
   // Doctors can write to patients, appointments, medical_records, and prescriptions
   if (role === 'doctor') {
-    return ['patients', 'appointments', 'medical_records', 'prescriptions'].includes(resource);
+    return ['patients', 'appointments', 'medical_records', 'prescriptions', 'inventory'].includes(resource);
   }
   
   // Owners and administrators have full write access

@@ -89,39 +89,39 @@ export enum SharingType {
 }
 
 /**
- * Document interface
+ * Document interface - matches database schema
  */
 export interface Document {
   id: string;
-  clinicId: string;
-  ownerId: string;
+  clinic_id: string;
+  owner_id: string;
   title: string;
   description?: string;
   category: DocumentCategory;
   format: FileFormat;
   status: DocumentStatus;
-  filePath: string;
-  fileName: string;
-  fileSize: number;
-  mimeType: string;
+  file_path: string;
+  file_name: string;
+  file_size: number;
+  mime_type: string;
   checksum: string;
-  folderId?: string;
+  folder_id?: string;
   tags: string[];
   metadata: DocumentMetadata;
   sharing?: DocumentSharing;
   retention?: RetentionPolicy;
   version: number;
-  currentVersionId: string;
-  isEncrypted: boolean;
-  isPublic: boolean;
-  downloadCount: number;
-  lastAccessedAt?: string;
-  lastDownloadedAt?: string;
-  expiresAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
+  current_version_id: string;
+  is_encrypted: boolean;
+  is_public: boolean;
+  download_count: number;
+  last_accessed_at?: string;
+  last_downloaded_at?: string;
+  expires_at?: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
 }
 
 /**
@@ -167,49 +167,49 @@ export interface RetentionPolicy {
 }
 
 /**
- * Document version
+ * Document version - matches database schema
  */
 export interface DocumentVersion {
   id: string;
-  documentId: string;
-  versionNumber: number;
-  filePath: string;
-  fileName: string;
-  fileSize: number;
+  document_id: string;
+  version_number: number;
+  file_path: string;
+  file_name: string;
+  file_size: number;
   checksum: string;
-  uploadedBy: string;
-  uploadedAt: string;
-  changeDescription?: string;
+  uploaded_by: string;
+  uploaded_at: string;
+  change_description?: string;
 }
 
 /**
- * Folder structure
+ * Folder structure - matches database schema
  */
 export interface Folder {
   id: string;
-  clinicId: string;
-  parentId?: string;
+  clinic_id: string;
+  parent_id?: string;
   name: string;
   path: string;
   description?: string;
-  isSystem: boolean;
-  documentCount: number;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
+  is_system: boolean;
+  document_count: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
 }
 
 /**
- * File upload result
+ * File upload result - matches database schema
  */
 export interface UploadResult {
-  documentId: string;
-  fileName: string;
-  fileSize: number;
-  filePath: string;
+  document_id: string;
+  file_name: string;
+  file_size: number;
+  file_path: string;
   checksum: string;
   version: number;
-  uploadedAt: string;
+  uploaded_at: string;
 }
 
 /**

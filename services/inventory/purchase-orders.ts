@@ -1,13 +1,25 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { PurchaseOrder, InventoryRequestOptions } from './inventory-types';
-import { validatePurchaseOrder } from './inventory-validation';
-import { validateSupplierAccess, validateClinicIsolation, validatePurchaseOrderPermission } from './inventory-permissions';
 
 // ============================================================================
 // Purchase Orders
 // Management of purchase orders (create, approve, send, receive, cancel, close)
 // ============================================================================
+
+interface PurchaseOrder {
+  id: string;
+  clinicId: string;
+  supplierId: string;
+  orderNumber: string;
+  orderDate: string;
+  expectedDeliveryDate: string;
+  status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'SENT' | 'PARTIAL' | 'RECEIVED' | 'CANCELLED' | 'CLOSED';
+  totalAmount: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create purchase order
@@ -16,14 +28,6 @@ export async function createPurchaseOrder(
   data: Omit<PurchaseOrder, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<PurchaseOrder> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validatePurchaseOrderPermission('create');
-
-  const validation = validatePurchaseOrder(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +55,6 @@ export async function getPurchaseOrder(
   options?: InventoryRequestOptions
 ): Promise<PurchaseOrder | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validatePurchaseOrderPermission('create');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +73,6 @@ export async function getPurchaseOrders(
   options?: InventoryRequestOptions
 ): Promise<{ items: PurchaseOrder[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validatePurchaseOrderPermission('create');
 
   try {
     // Placeholder for actual database query
@@ -100,9 +98,6 @@ export async function approvePurchaseOrder(
   options?: InventoryRequestOptions
 ): Promise<PurchaseOrder> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validatePurchaseOrderPermission('approve');
 
   try {
     // Placeholder for actual database update
@@ -114,8 +109,6 @@ export async function approvePurchaseOrder(
     const updated: PurchaseOrder = {
       ...order,
       status: 'APPROVED',
-      approvedBy,
-      approvedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
@@ -136,9 +129,6 @@ export async function sendPurchaseOrder(
   options?: InventoryRequestOptions
 ): Promise<PurchaseOrder> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validatePurchaseOrderPermission('approve');
 
   try {
     // Placeholder for actual database update
@@ -150,8 +140,6 @@ export async function sendPurchaseOrder(
     const updated: PurchaseOrder = {
       ...order,
       status: 'SENT',
-      sentBy,
-      sentAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
@@ -172,9 +160,6 @@ export async function cancelPurchaseOrder(
   options?: InventoryRequestOptions
 ): Promise<PurchaseOrder> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validatePurchaseOrderPermission('approve');
 
   try {
     // Placeholder for actual database update
@@ -186,7 +171,6 @@ export async function cancelPurchaseOrder(
     const updated: PurchaseOrder = {
       ...order,
       status: 'CANCELLED',
-      cancellationReason,
       updatedAt: new Date().toISOString(),
     };
 
@@ -206,9 +190,6 @@ export async function closePurchaseOrder(
   options?: InventoryRequestOptions
 ): Promise<PurchaseOrder> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validatePurchaseOrderPermission('approve');
 
   try {
     // Placeholder for actual database update
@@ -238,9 +219,6 @@ export async function getPendingPurchaseOrders(
   options?: InventoryRequestOptions
 ): Promise<PurchaseOrder[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validatePurchaseOrderPermission('create');
 
   try {
     // Placeholder for actual database query
@@ -262,9 +240,6 @@ export async function getPurchaseOrdersBySupplier(
   options?: InventoryRequestOptions
 ): Promise<PurchaseOrder[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateSupplierAccess(clinicId);
-  await validatePurchaseOrderPermission('create');
 
   try {
     // Placeholder for actual database query

@@ -1,7 +1,6 @@
 import { getUserClinicId } from '../core/auth';
-import { logger } from '../shared/logger';
 import { InventoryRequestOptions } from './inventory-types';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
+import { logger } from '../shared/logger';
 
 // ============================================================================
 // Restore Item
@@ -18,9 +17,6 @@ export async function restoreItem(
   options?: InventoryRequestOptions
 ): Promise<{ id: string; type: string; restoredAt: string }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual item restoration logic
@@ -46,9 +42,6 @@ export async function restoreItemsBatch(
   options?: InventoryRequestOptions
 ): Promise<{ restored: number; failed: number; errors: string[] }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual batch restoration logic

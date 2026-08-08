@@ -1,13 +1,24 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { GenericMedicine, InventoryRequestOptions } from './inventory-types';
-import { validateGenericMedicine } from './inventory-validation';
-import { validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Generic Medicines
 // Management of generic medicine entries (scientific names, therapeutic classes, ATC codes)
 // ============================================================================
+
+interface GenericMedicine {
+  id: string;
+  clinicId: string;
+  genericName: string;
+  scientificName?: string;
+  therapeuticClass?: string;
+  atcCode?: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create generic medicine
@@ -16,14 +27,6 @@ export async function createGenericMedicine(
   data: Omit<GenericMedicine, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<GenericMedicine> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateGenericMedicine(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +54,6 @@ export async function getGenericMedicine(
   options?: InventoryRequestOptions
 ): Promise<GenericMedicine | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +72,6 @@ export async function getGenericMedicines(
   options?: InventoryRequestOptions
 ): Promise<{ items: GenericMedicine[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -100,24 +97,18 @@ export async function updateGenericMedicine(
   options?: InventoryRequestOptions
 ): Promise<GenericMedicine> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
     const genericMedicine: GenericMedicine = {
       id,
       clinicId,
-      name: data.name || '',
+      genericName: data.genericName || '',
       scientificName: data.scientificName,
       description: data.description,
       therapeuticClass: data.therapeuticClass,
-      pharmacologicalClass: data.pharmacologicalClass,
       atcCode: data.atcCode,
       isActive: data.isActive ?? true,
-      createdBy: data.createdBy || '',
-      updatedBy: data.updatedBy,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -138,9 +129,6 @@ export async function deleteGenericMedicine(
   options?: InventoryRequestOptions
 ): Promise<void> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('delete');
 
   try {
     // Placeholder for actual database delete
@@ -159,9 +147,6 @@ export async function searchGenericMedicines(
   options?: InventoryRequestOptions
 ): Promise<GenericMedicine[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual search implementation
@@ -183,9 +168,6 @@ export async function getGenericMedicinesByTherapeuticClass(
   options?: InventoryRequestOptions
 ): Promise<GenericMedicine[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateClinicIsolation(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query

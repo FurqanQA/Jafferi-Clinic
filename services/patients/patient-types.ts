@@ -3,14 +3,14 @@
  */
 
 /**
- * Patient gender
+ * Patient gender - matches database gender_enum
  */
-export type PatientGender = 'male' | 'female' | 'other';
+export type PatientGender = 'male' | 'female' | 'other' | 'prefer_not_to_say';
 
 /**
- * Patient blood group
+ * Patient blood type - matches database blood_type field
  */
-export type BloodGroup = 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
+export type BloodType = 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
 
 /**
  * Patient status
@@ -23,12 +23,12 @@ export type PatientStatus = 'active' | 'inactive' | 'archived';
 export interface Patient {
   id: string;
   clinic_id: string;
-  medical_record_number: string;
+  patient_number: string;
   first_name: string;
   last_name: string;
   date_of_birth: string;
   gender: PatientGender;
-  blood_group?: BloodGroup;
+  blood_type?: BloodType;
   phone: string;
   email?: string;
   address?: string;
@@ -63,7 +63,7 @@ export interface CreatePatientInput {
   date_of_birth: string;
   gender: PatientGender;
   phone: string;
-  blood_group?: BloodGroup;
+  blood_type?: BloodType;
   email?: string;
   address?: string;
   city?: string;
@@ -90,7 +90,7 @@ export interface UpdatePatientInput {
   last_name?: string;
   date_of_birth?: string;
   gender?: PatientGender;
-  blood_group?: BloodGroup;
+  blood_type?: BloodType;
   phone?: string;
   email?: string;
   address?: string;
@@ -117,7 +117,7 @@ export interface UpdatePatientInput {
 export interface PatientFilters {
   status?: PatientStatus;
   gender?: PatientGender;
-  blood_group?: BloodGroup;
+  blood_type?: BloodType;
   created_from?: string;
   created_to?: string;
   age_min?: number;
@@ -164,11 +164,11 @@ export interface PatientSearchResult {
  * Patient export data
  */
 export interface PatientExportData {
-  medical_record_number: string;
+  patient_number: string;
   full_name: string;
   date_of_birth: string;
   gender: string;
-  blood_group: string;
+  blood_type: string;
   phone: string;
   email: string;
   address: string;

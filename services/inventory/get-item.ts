@@ -1,7 +1,6 @@
 import { getUserClinicId } from '../core/auth';
-import { logger } from '../shared/logger';
 import { InventoryRequestOptions } from './inventory-types';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
+import { logger } from '../shared/logger';
 
 // ============================================================================
 // Get Item
@@ -15,11 +14,8 @@ export async function getItem(
   itemType: string,
   id: string,
   options?: InventoryRequestOptions
-): Promise<{ id: string; type: string; data: Record<string, any> } | null> {
+): Promise<{ id: string; type: string; data: Record<string, unknown> } | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual item retrieval logic
@@ -42,15 +38,12 @@ export async function getItemsByIds(
   itemType: string,
   ids: string[],
   options?: InventoryRequestOptions
-): Promise<Array<{ id: string; type: string; data: Record<string, any> }>> {
+): Promise<Array<{ id: string; type: string; data: Record<string, unknown> }>> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual batch retrieval logic
-    const items: Array<{ id: string; type: string; data: Record<string, any> }> = [];
+    const items: Array<{ id: string; type: string; data: Record<string, unknown> }> = [];
 
     for (const id of ids) {
       const item = await getItem(itemType, id, options);

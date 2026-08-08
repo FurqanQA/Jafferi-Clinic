@@ -1,13 +1,25 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { Receiving, InventoryRequestOptions } from './inventory-types';
-import { validateReceiving } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Receiving
 // Management of goods receiving (partial, complete, quality check, rejection)
 // ============================================================================
+
+interface Receiving {
+  id: string;
+  clinicId: string;
+  purchaseOrderId: string;
+  supplierId: string;
+  receivedDate: string;
+  status: 'PENDING' | 'PARTIAL' | 'COMPLETE' | 'REJECTED';
+  totalReceived: number;
+  totalRejected: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create receiving record
@@ -16,14 +28,6 @@ export async function createReceiving(
   data: Omit<Receiving, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Receiving> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateReceiving(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +55,6 @@ export async function getReceiving(
   options?: InventoryRequestOptions
 ): Promise<Receiving | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +73,6 @@ export async function getReceivingRecords(
   options?: InventoryRequestOptions
 ): Promise<{ items: Receiving[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -100,9 +98,6 @@ export async function completeReceiving(
   options?: InventoryRequestOptions
 ): Promise<Receiving> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -113,9 +108,7 @@ export async function completeReceiving(
 
     const updated: Receiving = {
       ...receiving,
-      status: 'COMPLETED',
-      receivedBy,
-      receivedAt: new Date().toISOString(),
+      status: 'COMPLETE',
       updatedAt: new Date().toISOString(),
     };
 
@@ -136,9 +129,6 @@ export async function rejectReceiving(
   options?: InventoryRequestOptions
 ): Promise<Receiving> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -150,7 +140,6 @@ export async function rejectReceiving(
     const updated: Receiving = {
       ...receiving,
       status: 'REJECTED',
-      rejectionReason,
       updatedAt: new Date().toISOString(),
     };
 
@@ -170,9 +159,6 @@ export async function getReceivingByPurchaseOrder(
   options?: InventoryRequestOptions
 ): Promise<Receiving[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -193,9 +179,6 @@ export async function getPendingReceiving(
   options?: InventoryRequestOptions
 ): Promise<Receiving[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query

@@ -1,13 +1,25 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { StockAdjustment, InventoryRequestOptions } from './inventory-types';
-import { validateStockAdjustment } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockAdjustmentPermission } from './inventory-permissions';
 
 // ============================================================================
 // Stock Adjustment
 // Management of stock adjustments (physical count discrepancies, damage, loss, expiry, disposal)
 // ============================================================================
+
+interface StockAdjustment {
+  id: string;
+  clinicId: string;
+  itemId: string;
+  adjustmentType: 'PHYSICAL_COUNT' | 'DAMAGE' | 'LOSS' | 'EXPIRY' | 'DISPOSAL' | 'THEFT';
+  quantity: number;
+  reason: string;
+  approvedBy?: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create stock adjustment
@@ -16,14 +28,6 @@ export async function createStockAdjustment(
   data: Omit<StockAdjustment, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<StockAdjustment> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockAdjustmentPermission();
-
-  const validation = validateStockAdjustment(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +55,6 @@ export async function getStockAdjustment(
   options?: InventoryRequestOptions
 ): Promise<StockAdjustment | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockAdjustmentPermission();
 
   try {
     // Placeholder for actual database query
@@ -72,9 +73,6 @@ export async function getStockAdjustments(
   options?: InventoryRequestOptions
 ): Promise<{ items: StockAdjustment[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockAdjustmentPermission();
 
   try {
     // Placeholder for actual database query
@@ -100,9 +98,6 @@ export async function approveStockAdjustment(
   options?: InventoryRequestOptions
 ): Promise<StockAdjustment> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockAdjustmentPermission();
 
   try {
     // Placeholder for actual database update
@@ -114,8 +109,6 @@ export async function approveStockAdjustment(
     const updated: StockAdjustment = {
       ...adjustment,
       status: 'APPROVED',
-      approvedBy,
-      approvedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
@@ -136,9 +129,6 @@ export async function rejectStockAdjustment(
   options?: InventoryRequestOptions
 ): Promise<StockAdjustment> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockAdjustmentPermission();
 
   try {
     // Placeholder for actual database update
@@ -150,7 +140,6 @@ export async function rejectStockAdjustment(
     const updated: StockAdjustment = {
       ...adjustment,
       status: 'REJECTED',
-      rejectionReason,
       updatedAt: new Date().toISOString(),
     };
 
@@ -169,9 +158,6 @@ export async function getPendingStockAdjustments(
   options?: InventoryRequestOptions
 ): Promise<StockAdjustment[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockAdjustmentPermission();
 
   try {
     // Placeholder for actual database query

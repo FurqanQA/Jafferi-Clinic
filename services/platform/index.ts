@@ -1,10 +1,11 @@
 // ============================================================================
 // Platform Services Index
 // Central export point for all platform services
+// NOTE: Some modules have type/function conflicts. Import directly from module files for those.
 // ============================================================================
 
 // Core Types and Validation
-export * from './platform-types';
+export type * from './platform-types';
 export * from './platform-validation';
 export * from './platform-permissions';
 
@@ -16,69 +17,58 @@ export * from './tenant-manager';
 export * from './clinic-manager';
 export * from './organization-manager';
 export * from './owner-manager';
-export * from './staff-manager';
+// Note: staff-manager has type conflicts with platform-types (DaySchedule) - import directly
 
 // Subscription and Billing
 export * from './subscription-manager';
 export * from './licensing';
 export * from './plans';
-export * from './coupons';
-export * from './invoices';
 export * from './usage';
+// Note: coupons, invoices have type conflicts with platform-types - import directly from module
 
 // Feature Management
-export * from './feature-flags';
+// Note: feature-flags has type conflicts with platform-types - import directly
 export * from './feature-manager';
-export * from './module-manager';
+// Note: module-manager has type conflicts with platform-types - import directly from module
 
 // Background Processing
 export * from './scheduler';
-export * from './cron-jobs';
+// Note: cron-jobs has type conflicts with platform-types - import directly
 export * from './queue-manager';
-export * from './background-jobs';
-export * from './retry-engine';
 export * from './dead-letter-queue';
+// Note: background-jobs, retry-engine have type conflicts with platform-types - import directly from module
 
 // Caching and Storage
 export * from './redis';
-export * from './cache';
 export * from './cache-manager';
+// Note: cache has type conflicts with platform-types - import directly from module
 
 // Monitoring and Observability
 export * from './monitoring';
-export * from './metrics';
-export * from './health';
 export * from './diagnostics';
 export * from './uptime';
-export * from './alerts';
+// Note: metrics, health, alerts have type conflicts with platform-types - import directly from module
 
 // Logging and Auditing
-export * from './logging';
 export * from './audit';
-export * from './activity';
+// Note: logging has type conflicts with platform-types - import directly from module
+// Note: activity has function conflicts with analytics - import directly from module
 
 // Backup and Maintenance
-export * from './backup';
 export * from './restore';
-export * from './snapshots';
 export * from './maintenance';
 export * from './deployment';
-export * from './environment';
-export * from './secrets';
+// Note: backup, snapshots, environment, secrets have type conflicts with platform-types - import directly from module
 
 // Integrations
-export * from './integrations';
-export * from './plugins';
-export * from './marketplace';
-export * from './webhooks';
+// Note: integrations, plugins, webhooks, marketplace have type conflicts with platform-types - import directly from module
 
 // Support and Communications
 export * from './support';
-export * from './support-tickets';
-export * from './announcements';
+// Note: support-tickets, announcements have type conflicts with platform-types - import directly from module
 
 // Analytics and Revenue
-export * from './analytics';
+// Note: analytics has function conflicts with activity - import directly from module
 export * from './revenue';
 export * from './forecasting';
 

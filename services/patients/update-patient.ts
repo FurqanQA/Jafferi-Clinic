@@ -41,7 +41,7 @@ export async function updatePatient(patientId: string, input: UpdatePatientInput
         last_name: validatedInput.last_name,
         date_of_birth: validatedInput.date_of_birth,
         gender: validatedInput.gender,
-        blood_group: validatedInput.blood_group,
+        blood_type: validatedInput.blood_type,
         phone: validatedInput.phone,
         email: validatedInput.email,
         address: validatedInput.address,

@@ -20,6 +20,7 @@ function getDateRangeBoundaries(dateRange: string, startDate?: string, endDate?:
   const now = new Date();
   const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  const dayOfWeek = now.getDay();
 
   switch (dateRange) {
     case 'today':
@@ -33,7 +34,6 @@ function getDateRangeBoundaries(dateRange: string, startDate?: string, endDate?:
       return { start: startOfYesterday.toISOString(), end: endOfYesterday.toISOString() };
     
     case 'this_week':
-      const dayOfWeek = now.getDay();
       const startOfWeek = new Date(now);
       startOfWeek.setDate(now.getDate() - dayOfWeek);
       startOfWeek.setHours(0, 0, 0, 0);

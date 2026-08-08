@@ -1,7 +1,9 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, AuthorizationError, DatabaseError } from '../core/errors';
 import { logger } from '../shared/logger';
 import { Document, DocumentSharing, SharingType } from './document-types';
 import { validateDocumentSharePermission } from './document-permissions';
+import { getSupabaseClient } from '../core/client';
 
 // ============================================================================
 // File Sharing Service
@@ -18,21 +20,28 @@ export async function shareDocumentInternally(
 ): Promise<DocumentSharing> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentSharePermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     const sharing: DocumentSharing = {
@@ -42,7 +51,18 @@ export async function shareDocumentInternally(
       accessCount: 0,
     };
 
-    // Placeholder for database update
+    // Update document in database
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({ sharing, updated_at: new Date().toISOString(), updated_by: user.id })
+      .eq('id', documentId)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw new DatabaseError('Failed to share document internally', { error: updateError });
+    }
+
     logger.info('Document shared internally', { 
       documentId, 
       sharedWithCount: sharedWith.length, 
@@ -76,21 +96,28 @@ export async function generateSecureShareLink(
 ): Promise<{ shareLink: string; sharing: DocumentSharing }> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentSharePermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     // Generate share link token
@@ -111,7 +138,18 @@ export async function generateSecureShareLink(
       accessCount: 0,
     };
 
-    // Placeholder for database update
+    // Update document in database
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({ sharing, updated_at: new Date().toISOString(), updated_by: user.id })
+      .eq('id', documentId)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw new DatabaseError('Failed to generate secure share link', { error: updateError });
+    }
+
     logger.info('Secure share link generated', { 
       documentId, 
       shareLink, 
@@ -138,12 +176,23 @@ export async function generateSecureShareLink(
 export async function revokeDocumentSharing(documentId: string): Promise<void> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentSharePermission(documentId);
 
-    // Placeholder for database update
+    // Update document in database to remove sharing
+    const { error: updateError } = await supabase
+      .from('documents')
+      .update({ sharing: null, updated_at: new Date().toISOString(), updated_by: user.id })
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId);
+
+    if (updateError) {
+      throw new DatabaseError('Failed to revoke document sharing', { error: updateError });
+    }
+
     logger.info('Document sharing revoked', { documentId, clinicId, userId: user.id });
   } catch (error) {
     logger.error('Failed to revoke document sharing', { 
@@ -162,21 +211,23 @@ export async function revokeDocumentSharing(documentId: string): Promise<void> {
 export async function getDocumentSharing(documentId: string): Promise<DocumentSharing> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentSharePermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error } = await supabase
+      .from('documents')
+      .select('sharing')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
-    }
-
-    // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (error || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     const sharing = document.sharing || {
@@ -208,19 +259,46 @@ export async function updateDocumentSharing(
 ): Promise<DocumentSharing> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentSharePermission(documentId);
 
-    const existingSharing = await getDocumentSharing(documentId);
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('sharing')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    const updatedSharing: DocumentSharing = {
-      ...existingSharing,
-      ...updates,
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
+    }
+
+    const sharing = document.sharing || {
+      type: SharingType.INTERNAL,
+      sharedWith: [],
+      sharedRoles: [],
+      accessCount: 0,
     };
 
-    // Placeholder for database update
+    const updatedSharing = { ...sharing, ...updates };
+
+    // Update document in database
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({ sharing: updatedSharing, updated_at: new Date().toISOString(), updated_by: user.id })
+      .eq('id', documentId)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw new DatabaseError('Failed to update document sharing', { error: updateError });
+    }
+
     logger.info('Document sharing updated', { documentId, clinicId, userId: user.id });
     return updatedSharing;
   } catch (error) {
@@ -237,26 +315,53 @@ export async function updateDocumentSharing(
 /**
  * Access shared document via link
  */
-export async function accessSharedDocument(shareToken: string): Promise<Document> {
+export async function incrementShareAccessCount(shareToken: string): Promise<void> {
+  const user = await getCurrentUser();
+  const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
+
   try {
-    // Placeholder for token validation and document retrieval
-    const document: Document | null = null;
+    // Fetch document by share token
+    const { data: documents, error: fetchError } = await supabase
+      .from('documents')
+      .select('id, sharing')
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null);
+
+    if (fetchError) {
+      throw new DatabaseError('Failed to fetch document', { error: fetchError });
+    }
+
+    const document = (documents || []).find(doc => 
+      doc.sharing?.shareLink?.includes(shareToken)
+    );
 
     if (!document) {
-      throw new Error('Document not found or link expired');
+      throw new NotFoundError('Document not found');
     }
 
-    // Increment access count
     if (document.sharing) {
-      document.sharing.accessCount++;
+      document.sharing.accessCount = (document.sharing.accessCount || 0) + 1;
+      
+      // Update document in database
+      const { error: updateError } = await supabase
+        .from('documents')
+        .update({ sharing: document.sharing, updated_at: new Date().toISOString() })
+        .eq('id', document.id);
+
+      if (updateError) {
+        throw new DatabaseError('Failed to increment share access count', { error: updateError });
+      }
     }
 
-    // Placeholder for database update
     logger.info('Shared document accessed', { shareToken, documentId: document.id });
-
-    return document;
   } catch (error) {
-    logger.error('Failed to access shared document', { error, shareToken });
+    logger.error('Failed to increment share access count', { 
+      error, 
+      shareToken, 
+      clinicId, 
+      userId: user.id 
+    });
     throw error;
   }
 }

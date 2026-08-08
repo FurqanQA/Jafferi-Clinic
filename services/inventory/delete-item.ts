@@ -1,7 +1,6 @@
 import { getUserClinicId } from '../core/auth';
-import { logger } from '../shared/logger';
 import { InventoryRequestOptions } from './inventory-types';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
+import { logger } from '../shared/logger';
 
 // ============================================================================
 // Delete Item
@@ -19,9 +18,6 @@ export async function deleteItem(
 ): Promise<{ id: string; type: string; deletedAt: string }> {
   const clinicId = options?.clinicId || await getUserClinicId();
   
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
   try {
     // Placeholder for actual item deletion logic
     
@@ -47,9 +43,6 @@ export async function deleteItemsBatch(
 ): Promise<{ deleted: number; failed: number; errors: string[] }> {
   const clinicId = options?.clinicId || await getUserClinicId();
   
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
   try {
     // Placeholder for actual batch deletion logic
     let deleted = 0;

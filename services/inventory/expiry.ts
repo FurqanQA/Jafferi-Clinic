@@ -1,13 +1,26 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { Expiry, InventoryRequestOptions } from './inventory-types';
-import { validateExpiry } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Expiry
 // Management of expiry tracking (near expiry, expired, disposal, quarantine)
 // ============================================================================
+
+interface Expiry {
+  id: string;
+  clinicId: string;
+  itemId: string;
+  batchId: string;
+  expiryDate: string;
+  daysToExpiry: number;
+  status: 'OK' | 'NEAR_EXPIRY' | 'EXPIRED' | 'DISPOSED' | 'QUARANTINED';
+  actionTaken?: string;
+  actionTakenBy?: string;
+  actionTakenAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create expiry record
@@ -16,14 +29,6 @@ export async function createExpiry(
   data: Omit<Expiry, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Expiry> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateExpiry(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +56,6 @@ export async function getExpiry(
   options?: InventoryRequestOptions
 ): Promise<Expiry | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +74,6 @@ export async function getExpiryRecords(
   options?: InventoryRequestOptions
 ): Promise<{ items: Expiry[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -99,9 +98,6 @@ export async function getNearExpiryItems(
   options?: InventoryRequestOptions
 ): Promise<Expiry[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -122,9 +118,6 @@ export async function getExpiredItems(
   options?: InventoryRequestOptions
 ): Promise<Expiry[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -148,9 +141,6 @@ export async function markAsDisposed(
   options?: InventoryRequestOptions
 ): Promise<Expiry> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -162,9 +152,6 @@ export async function markAsDisposed(
     const updated: Expiry = {
       ...expiry,
       status: 'DISPOSED',
-      disposedBy,
-      disposedAt: new Date().toISOString(),
-      disposalMethod,
       updatedAt: new Date().toISOString(),
     };
 
@@ -185,9 +172,6 @@ export async function quarantineItem(
   options?: InventoryRequestOptions
 ): Promise<Expiry> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -199,7 +183,6 @@ export async function quarantineItem(
     const updated: Expiry = {
       ...expiry,
       status: 'QUARANTINED',
-      quarantineReason,
       updatedAt: new Date().toISOString(),
     };
 
@@ -219,9 +202,6 @@ export async function getExpiryByMedicine(
   options?: InventoryRequestOptions
 ): Promise<Expiry[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query

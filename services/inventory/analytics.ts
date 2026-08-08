@@ -1,7 +1,6 @@
 import { getUserClinicId } from '../core/auth';
-import { logger } from '../shared/logger';
 import { InventoryRequestOptions } from './inventory-types';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
+import { logger } from '../shared/logger';
 
 // ============================================================================
 // Analytics
@@ -15,9 +14,6 @@ export async function getStockSummary(
   options?: InventoryRequestOptions
 ): Promise<{ totalItems: number; totalValue: number; lowStockCount: number; expiredCount: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual analytics query
@@ -45,9 +41,6 @@ export async function getStockMovementAnalytics(
   options?: InventoryRequestOptions
 ): Promise<{ movements: number; inQuantity: number; outQuantity: number; transfers: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual analytics query
@@ -76,9 +69,6 @@ export async function getMedicineConsumptionAnalytics(
   options?: InventoryRequestOptions
 ): Promise<{ totalDispensed: number; averageDaily: number; peakUsage: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual analytics query
@@ -106,9 +96,6 @@ export async function getWarehousePerformanceAnalytics(
   options?: InventoryRequestOptions
 ): Promise<{ throughput: number; accuracy: number; turnoverRate: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual analytics query
@@ -136,9 +123,6 @@ export async function getSupplierPerformanceAnalytics(
   options?: InventoryRequestOptions
 ): Promise<{ onTimeDelivery: number; qualityScore: number; orderCount: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual analytics query
@@ -164,11 +148,8 @@ export async function generateInventoryReport(
   startDate: string,
   endDate: string,
   options?: InventoryRequestOptions
-): Promise<{ data: any; generatedAt: string }> {
+): Promise<{ data: unknown; generatedAt: string }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual report generation

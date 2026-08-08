@@ -2,7 +2,7 @@ import { getSupabaseClient } from '../core/client';
 import { getUserClinicId } from '../core/auth';
 import { DatabaseError } from '../core/errors';
 import { logger } from '../shared/logger';
-import { CalendarEvent, CalendarView, Appointment } from './appointment-types';
+import { CalendarEvent, CalendarView, Appointment, CalendarAppointment, AppointmentStatus } from './appointment-types';
 
 /**
  * Calendar view parameters
@@ -66,16 +66,16 @@ export async function getCalendarEvents(params: CalendarViewParams): Promise<Cal
     }
 
     // Transform to calendar events
-    const events = (data || []).map((apt: any) => ({
+    const events = (data || []).map((apt: CalendarAppointment) => ({
       id: apt.id,
-      title: `${apt.patients.first_name} ${apt.patients.last_name}`,
+      title: apt.patients?.[0] ? `${apt.patients[0].first_name} ${apt.patients[0].last_name}` : 'Unknown',
       start: new Date(`${apt.appointment_date}T${apt.start_time}`),
       end: new Date(`${apt.appointment_date}T${apt.end_time}`),
       patient_id: apt.patient_id,
-      patient_name: `${apt.patients.first_name} ${apt.patients.last_name}`,
+      patient_name: apt.patients?.[0] ? `${apt.patients[0].first_name} ${apt.patients[0].last_name}` : 'Unknown',
       doctor_id: apt.doctor_id,
-      doctor_name: `${apt.doctors.first_name} ${apt.doctors.last_name}`,
-      status: apt.status,
+      doctor_name: apt.doctors?.[0] ? `${apt.doctors[0].first_name} ${apt.doctors[0].last_name}` : 'Unknown',
+      status: apt.status as AppointmentStatus,
       color_tag: apt.color_tag,
     }));
 
@@ -244,16 +244,16 @@ export async function getAgendaView(
       throw new DatabaseError('Failed to fetch agenda view', { error });
     }
 
-    const events = (data || []).map((apt: any) => ({
+    const events = (data || []).map((apt: CalendarAppointment) => ({
       id: apt.id,
-      title: `${apt.patients.first_name} ${apt.patients.last_name}`,
+      title: apt.patients?.[0] ? `${apt.patients[0].first_name} ${apt.patients[0].last_name}` : 'Unknown',
       start: new Date(`${apt.appointment_date}T${apt.start_time}`),
       end: new Date(`${apt.appointment_date}T${apt.end_time}`),
       patient_id: apt.patient_id,
-      patient_name: `${apt.patients.first_name} ${apt.patients.last_name}`,
+      patient_name: apt.patients?.[0] ? `${apt.patients[0].first_name} ${apt.patients[0].last_name}` : 'Unknown',
       doctor_id: apt.doctor_id,
-      doctor_name: `${apt.doctors.first_name} ${apt.doctors.last_name}`,
-      status: apt.status,
+      doctor_name: apt.doctors?.[0] ? `${apt.doctors[0].first_name} ${apt.doctors[0].last_name}` : 'Unknown',
+      status: apt.status as AppointmentStatus,
       color_tag: apt.color_tag,
     }));
 

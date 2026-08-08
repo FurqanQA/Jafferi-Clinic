@@ -6,6 +6,7 @@ import {
   AppointmentSource, 
   AppointmentStatus 
 } from './appointment-types';
+import { ValidationError } from '../core/errors';
 
 /**
  * Zod schema for creating an appointment
@@ -91,7 +92,7 @@ export const updateAppointmentSchema = z.object({
 export function validateAppointmentId(appointmentId: string): string {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(appointmentId)) {
-    throw new Error('Invalid appointment ID format');
+    throw new ValidationError('Invalid appointment ID format');
   }
   return appointmentId;
 }
@@ -121,7 +122,7 @@ export function validateStatusTransition(
   const validTransitions = VALID_STATUS_TRANSITIONS[currentStatus] || [];
   
   if (!validTransitions.includes(newStatus)) {
-    throw new Error(
+    throw new ValidationError(
       `Invalid status transition from ${currentStatus} to ${newStatus}. ` +
       `Valid transitions: ${validTransitions.join(', ')}`
     );
@@ -145,7 +146,7 @@ export function validateAppointmentDateInFuture(appointmentDate: string): void {
   now.setHours(0, 0, 0, 0);
   
   if (appointment < now) {
-    throw new Error('Appointment date must be in the future');
+    throw new ValidationError('Appointment date must be in the future');
   }
 }
 
@@ -161,6 +162,6 @@ export function validateWorkingHours(startTime: string, endTime: string): void {
   const clinicClose = 20 * 60; // 8:00 PM
   
   if (start < clinicOpen || end > clinicClose) {
-    throw new Error('Appointment must be within clinic working hours (8:00 AM - 8:00 PM)');
+    throw new ValidationError('Appointment must be within clinic working hours (8:00 AM - 8:00 PM)');
   }
 }

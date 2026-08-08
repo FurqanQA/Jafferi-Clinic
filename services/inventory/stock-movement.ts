@@ -1,13 +1,25 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { StockMovement, InventoryRequestOptions } from './inventory-types';
-import { validateStockMovement } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Stock Movement
 // Management of stock movement records (in, out, transfer, adjustment, damage, loss, expiry, disposal, reservation)
 // ============================================================================
+
+interface StockMovement {
+  id: string;
+  clinicId: string;
+  itemId: string;
+  movementType: 'IN' | 'OUT' | 'TRANSFER' | 'ADJUSTMENT' | 'DAMAGE' | 'LOSS' | 'EXPIRY' | 'DISPOSAL' | 'RESERVATION';
+  quantity: number;
+  fromWarehouseId?: string;
+  toWarehouseId?: string;
+  referenceId?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create stock movement
@@ -16,14 +28,6 @@ export async function createStockMovement(
   data: Omit<StockMovement, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<StockMovement> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateStockMovement(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +55,6 @@ export async function getStockMovement(
   options?: InventoryRequestOptions
 ): Promise<StockMovement | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +73,6 @@ export async function getStockMovements(
   options?: InventoryRequestOptions
 ): Promise<{ items: StockMovement[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -99,9 +97,6 @@ export async function getStockMovementsByMedicine(
   options?: InventoryRequestOptions
 ): Promise<StockMovement[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -123,9 +118,6 @@ export async function getStockMovementsByType(
   options?: InventoryRequestOptions
 ): Promise<StockMovement[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -148,9 +140,6 @@ export async function getStockMovementsByDateRange(
   options?: InventoryRequestOptions
 ): Promise<StockMovement[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query

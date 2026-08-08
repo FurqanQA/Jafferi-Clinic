@@ -63,7 +63,8 @@ export async function getApiKeys(options: GetApiKeysOptions): Promise<GetApiKeys
     }
 
     if (options.scope) {
-      keys = keys.filter((key) => key.scopes.includes(options.scope as any));
+      // Filter by scope - scope is a string that should match ApiKeyScope enum values
+      keys = keys.filter((key) => key.scopes.some(s => s === options.scope));
     }
 
     if (options.search) {

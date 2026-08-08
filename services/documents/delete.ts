@@ -1,8 +1,10 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, AuthorizationError, DatabaseError, ConflictError } from '../core/errors';
 import { logger } from '../shared/logger';
-import { Document, DocumentStatus } from './document-types';
+import { Document, DocumentStatus, StorageBucket } from './document-types';
 import { validateDocumentDeletePermission } from './document-permissions';
 import { deleteFromStorage, moveInStorage } from './storage';
+import { getSupabaseClient } from '../core/client';
 
 // ============================================================================
 // Delete Service
@@ -15,41 +17,57 @@ import { deleteFromStorage, moveInStorage } from './storage';
 export async function deleteDocument(documentId: string): Promise<Document> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentDeletePermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     if (document.status === DocumentStatus.DELETED) {
-      throw new Error('Document is already in trash');
+      throw new ConflictError('Document is already in trash');
     }
 
     // Move file to trash storage
-    await moveInStorage(document.filePath, `trash/${document.filePath}`, 'private' as any);
+    await moveInStorage(document.file_path, `trash/${document.file_path}`, StorageBucket.PRIVATE);
 
-    const updatedDocument: Document = {
-      ...document,
-      status: DocumentStatus.DELETED,
-      filePath: `trash/${document.filePath}`,
-      updatedAt: new Date().toISOString(),
-      updatedBy: user.id,
-    };
+    // Update document in database (soft delete)
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({
+        status: DocumentStatus.DELETED,
+        file_path: `trash/${document.file_path}`,
+        deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+      })
+      .eq('id', documentId)
+      .select()
+      .single();
 
-    // Placeholder for database update
+    if (updateError) {
+      throw new DatabaseError('Failed to delete document', { error: updateError });
+    }
+
     logger.info('Document deleted (moved to trash)', { documentId, clinicId, userId: user.id });
-    return updatedDocument;
+    return updatedDocument as Document;
   } catch (error) {
     logger.error('Failed to delete document', { error, documentId, clinicId, userId: user.id });
     throw error;
@@ -99,27 +117,42 @@ export async function deleteDocuments(documentIds: string[]): Promise<{
 export async function permanentDeleteDocument(documentId: string): Promise<void> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentDeletePermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     // Delete file from storage
-    await deleteFromStorage(document.filePath, 'private' as any);
+    await deleteFromStorage(document.file_path, StorageBucket.PRIVATE);
 
-    // Placeholder for database deletion
+    // Delete from database
+    const { error: deleteError } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', documentId);
+
+    if (deleteError) {
+      throw new DatabaseError('Failed to permanently delete document', { error: deleteError });
+    }
+
     logger.info('Document permanently deleted', { documentId, clinicId, userId: user.id });
   } catch (error) {
     logger.error('Failed to permanently delete document', { 

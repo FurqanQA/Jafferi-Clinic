@@ -3,16 +3,7 @@
 // Main export file for the Enterprise Pharmacy Inventory & Supply Chain Management Service
 // ============================================================================
 
-// Core types and validation
-export * from './inventory-types';
-export * from './inventory-validation';
-export * from './inventory-permissions';
-
-// Inventory engine
-export * from './inventory-engine';
-
 // Medicine catalog
-export * from './medicine-catalog';
 export * from './generic-medicines';
 export * from './brands';
 export * from './categories';

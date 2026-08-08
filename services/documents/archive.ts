@@ -1,8 +1,10 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, AuthorizationError, DatabaseError, ConflictError } from '../core/errors';
 import { logger } from '../shared/logger';
-import { Document, DocumentStatus } from './document-types';
+import { Document, DocumentStatus, StorageBucket } from './document-types';
 import { validateDocumentEditPermission } from './document-permissions';
 import { moveInStorage } from './storage';
+import { getSupabaseClient } from '../core/client';
 
 // ============================================================================
 // Archive Service
@@ -15,40 +17,55 @@ import { moveInStorage } from './storage';
 export async function archiveDocument(documentId: string): Promise<Document> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentEditPermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     if (document.status === DocumentStatus.ARCHIVED) {
-      throw new Error('Document is already archived');
+      throw new ConflictError('Document is already archived');
     }
 
     // Move file to archive storage
-    await moveInStorage(document.filePath, `archive/${document.filePath}`, 'private' as any);
+    await moveInStorage(document.file_path, `archive/${document.file_path}`, StorageBucket.PRIVATE);
 
-    const updatedDocument: Document = {
-      ...document,
-      status: DocumentStatus.ARCHIVED,
-      updatedAt: new Date().toISOString(),
-      updatedBy: user.id,
-    };
+    // Update document in database
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({
+        status: DocumentStatus.ARCHIVED,
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+      })
+      .eq('id', documentId)
+      .select()
+      .single();
 
-    // Placeholder for database update
+    if (updateError) {
+      throw new DatabaseError('Failed to archive document', { error: updateError });
+    }
+
     logger.info('Document archived', { documentId, clinicId, userId: user.id });
-    return updatedDocument;
+    return updatedDocument as Document;
   } catch (error) {
     logger.error('Failed to archive document', { error, documentId, clinicId, userId: user.id });
     throw error;
@@ -126,42 +143,57 @@ export async function getArchivedDocuments(options?: {
 export async function unarchiveDocument(documentId: string): Promise<Document> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentEditPermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     if (document.status !== DocumentStatus.ARCHIVED) {
-      throw new Error('Document is not archived');
+      throw new ConflictError('Document is not archived');
     }
 
     // Move file back from archive storage
-    const originalPath = document.filePath.replace('archive/', '');
-    await moveInStorage(document.filePath, originalPath, 'private' as any);
+    const originalPath = document.file_path.replace('archive/', '');
+    await moveInStorage(document.file_path, originalPath, StorageBucket.PRIVATE);
 
-    const updatedDocument: Document = {
-      ...document,
-      status: DocumentStatus.ACTIVE,
-      filePath: originalPath,
-      updatedAt: new Date().toISOString(),
-      updatedBy: user.id,
-    };
+    // Update document in database
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({
+        status: DocumentStatus.ACTIVE,
+        file_path: originalPath,
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+      })
+      .eq('id', documentId)
+      .select()
+      .single();
 
-    // Placeholder for database update
+    if (updateError) {
+      throw new DatabaseError('Failed to unarchive document', { error: updateError });
+    }
+
     logger.info('Document unarchived', { documentId, clinicId, userId: user.id });
-    return updatedDocument;
+    return updatedDocument as Document;
   } catch (error) {
     logger.error('Failed to unarchive document', { error, documentId, clinicId, userId: user.id });
     throw error;

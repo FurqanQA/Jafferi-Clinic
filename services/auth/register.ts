@@ -4,6 +4,7 @@ import { toAuthenticatedUser, toSession, toAuthError } from '@/lib/supabase/type
 
 export interface RegisterInput {
   fullName?: string;
+  clinicName?: string;
   email: string;
   phone?: string;
   password: string;

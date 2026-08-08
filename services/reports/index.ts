@@ -1,6 +1,7 @@
 // ============================================================================
 // Reports Service
 // Enterprise Reporting & Business Intelligence Service
+// NOTE: Some modules have export conflicts. Use direct imports for those.
 // ============================================================================
 
 // Types and Validation
@@ -17,15 +18,11 @@ export * from './report-scheduler';
 export * from './report-generator';
 
 // Supporting Services
-export * from './report-cache';
+// Note: report-cache, report-templates, report-sharing, report-subscriptions, report-filters, report-export have conflicts - import directly
 export * from './report-history';
-export * from './report-templates';
-export * from './report-sharing';
-export * from './report-subscriptions';
-export * from './report-filters';
 
 // Output Services
-export * from './report-export';
+// Note: report-export has conflicts - import directly
 export * from './report-print';
 export * from './report-email';
 
@@ -42,7 +39,7 @@ export * from './prescription-reports';
 export * from './laboratory-reports';
 export * from './inventory-reports';
 export * from './billing-reports';
-export * from './payment-reports';
+// Note: payment-reports has conflicts with financial-reports - import directly
 export * from './notification-reports';
 export * from './dashboard-reports';
 export * from './operational-reports';
@@ -55,12 +52,10 @@ export * from './analytics';
 export * from './trends';
 
 // CRUD Operations
-export * from './create-report';
-export * from './update-report';
+// Note: create-report, update-report, export-reports have conflicts - import directly
 export * from './delete-report';
 export * from './archive-report';
 export * from './restore-report';
 export * from './get-report';
 export * from './get-reports';
 export * from './search-reports';
-export * from './export-reports';

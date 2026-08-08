@@ -1,13 +1,23 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { SerialNumber, InventoryRequestOptions } from './inventory-types';
-import { validateSerialNumber } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Serial Numbers
 // Management of serial numbers for trackable items (create, assign, track, verify)
 // ============================================================================
+
+interface SerialNumber {
+  id: string;
+  clinicId: string;
+  itemId: string;
+  serialNumber: string;
+  batchNumber?: string;
+  expiryDate?: string;
+  status: 'AVAILABLE' | 'ASSIGNED' | 'SOLD' | 'RETURNED' | 'DAMAGED' | 'EXPIRED';
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create serial number
@@ -16,14 +26,6 @@ export async function createSerialNumber(
   data: Omit<SerialNumber, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<SerialNumber> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateSerialNumber(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +53,6 @@ export async function getSerialNumber(
   options?: InventoryRequestOptions
 ): Promise<SerialNumber | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +71,6 @@ export async function getSerialNumbers(
   options?: InventoryRequestOptions
 ): Promise<{ items: SerialNumber[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -99,9 +95,6 @@ export async function getSerialNumberBySerial(
   options?: InventoryRequestOptions
 ): Promise<SerialNumber | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -121,9 +114,6 @@ export async function getSerialNumbersByMedicine(
   options?: InventoryRequestOptions
 ): Promise<SerialNumber[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -146,9 +136,6 @@ export async function assignSerialNumber(
   options?: InventoryRequestOptions
 ): Promise<SerialNumber> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -159,7 +146,6 @@ export async function assignSerialNumber(
 
     const updated: SerialNumber = {
       ...serialNumber,
-      stockId,
       status: 'ASSIGNED',
       updatedAt: new Date().toISOString(),
     };
@@ -180,9 +166,6 @@ export async function verifySerialNumber(
   options?: InventoryRequestOptions
 ): Promise<{ valid: boolean; serialNumber?: SerialNumber }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query

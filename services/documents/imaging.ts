@@ -1,5 +1,6 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
 import { logger } from '../shared/logger';
+import { NotFoundError, AuthorizationError, DatabaseError } from '../core/errors';
 import { ImagingStudy, Document, PaginationOptions } from './document-types';
 import { validateDocumentViewPermission } from './document-permissions';
 
@@ -47,7 +48,7 @@ export async function getImagingStudy(studyId: string): Promise<ImagingStudy> {
     const study: ImagingStudy | null = null;
 
     if (!study) {
-      throw new Error('Imaging study not found');
+      throw new NotFoundError('Imaging study not found');
     }
 
     logger.info('Imaging study retrieved', { studyId, clinicId, userId: user.id });

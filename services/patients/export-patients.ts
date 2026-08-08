@@ -57,11 +57,11 @@ export async function exportPatients(params?: {
 
     // Transform to export format
     const exportData = (data || []).map((patient: Patient) => ({
-      medical_record_number: patient.medical_record_number,
+      patient_number: patient.patient_number,
       full_name: `${patient.first_name} ${patient.last_name}`,
       date_of_birth: patient.date_of_birth,
       gender: patient.gender,
-      blood_group: patient.blood_group || '',
+      blood_type: patient.blood_type || '',
       phone: patient.phone,
       email: patient.email || '',
       address: patient.address || '',
@@ -118,11 +118,11 @@ export function patientsToCSV(data: PatientExportData[]): string {
   ];
 
   return objectsToCSV(headers, data, (patient) => [
-    patient.medical_record_number,
+    patient.patient_number,
     patient.full_name,
     patient.date_of_birth,
     patient.gender,
-    patient.blood_group,
+    patient.blood_type,
     patient.phone,
     patient.email,
     patient.address,

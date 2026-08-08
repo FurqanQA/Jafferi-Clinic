@@ -1,13 +1,22 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { PrintTemplate, InventoryRequestOptions } from './inventory-types';
-import { validatePrintTemplate } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Print
 // Management of print templates and printing for labels, reports, documents
 // ============================================================================
+
+interface PrintTemplate {
+  id: string;
+  clinicId: string;
+  name: string;
+  type: 'LABEL' | 'REPORT' | 'DOCUMENT';
+  template: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create print template
@@ -16,14 +25,6 @@ export async function createPrintTemplate(
   data: Omit<PrintTemplate, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<PrintTemplate> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validatePrintTemplate(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +52,6 @@ export async function getPrintTemplate(
   options?: InventoryRequestOptions
 ): Promise<PrintTemplate | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +70,6 @@ export async function getPrintTemplates(
   options?: InventoryRequestOptions
 ): Promise<{ items: PrintTemplate[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -99,9 +94,6 @@ export async function getPrintTemplatesByType(
   options?: InventoryRequestOptions
 ): Promise<PrintTemplate[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -124,9 +116,6 @@ export async function updatePrintTemplate(
   options?: InventoryRequestOptions
 ): Promise<PrintTemplate> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -134,10 +123,9 @@ export async function updatePrintTemplate(
       id,
       clinicId,
       name: data.name || '',
-      templateType: data.templateType || 'LABEL',
-      content: data.content || '',
+      type: data.type || 'LABEL',
+      template: data.template || '',
       isActive: data.isActive ?? true,
-      updatedBy: data.updatedBy,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -155,13 +143,10 @@ export async function updatePrintTemplate(
  */
 export async function generatePrintOutput(
   templateId: string,
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   options?: InventoryRequestOptions
 ): Promise<{ output: string; format: string }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual print generation logic

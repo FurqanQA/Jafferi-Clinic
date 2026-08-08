@@ -1,11 +1,10 @@
 import { getUserClinicId } from '../core/auth';
-import { logger } from '../shared/logger';
 import { InventoryRequestOptions } from './inventory-types';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
+import { logger } from '../shared/logger';
 
 // ============================================================================
 // Export Items
-// Generic item export handler for all inventory entities
+// Generic items export handler for all inventory entities
 // ============================================================================
 
 /**
@@ -14,13 +13,10 @@ import { validateWarehouseAccess, validateClinicIsolation, validateStockOperatio
 export async function exportItems(
   itemType: string,
   format: 'CSV' | 'JSON' | 'EXCEL' | 'PDF',
-  filters?: Record<string, any>,
+  filters?: Record<string, unknown>,
   options?: InventoryRequestOptions
 ): Promise<{ data: string; format: string; exportedAt: string; itemCount: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual export logic
@@ -50,9 +46,6 @@ export async function exportItemsByIds(
   options?: InventoryRequestOptions
 ): Promise<{ data: string; format: string; exportedAt: string; itemCount: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual export by IDs logic

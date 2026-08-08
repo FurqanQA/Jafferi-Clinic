@@ -26,16 +26,18 @@ export async function updateReport(
       throw new Error('Report not found');
     }
 
+    const report = existingReport as Report;
+
     // Check permissions
     await validateReportEditPermission(reportId);
 
     // Check category access if category is being changed
-    if (updates.category && updates.category !== existingReport.category) {
+    if (updates.category && updates.category !== report.category) {
       await validateReportCategoryAccess(updates.category);
     }
 
     const updatedReport: Report = {
-      ...existingReport,
+      ...report,
       ...updates,
       updatedAt: new Date().toISOString(),
     };
@@ -67,11 +69,13 @@ export async function updateReportStatus(
       throw new Error('Report not found');
     }
 
+    const report = existingReport as Report;
+
     // Check permissions
     await validateReportEditPermission(reportId);
 
     const updatedReport: Report = {
-      ...existingReport,
+      ...report,
       status,
       updatedAt: new Date().toISOString(),
     };
@@ -103,11 +107,13 @@ export async function updateReportSchedule(
       throw new Error('Report not found');
     }
 
+    const report = existingReport as Report;
+
     // Check permissions
     await validateReportEditPermission(reportId);
 
     const updatedReport: Report = {
-      ...existingReport,
+      ...report,
       schedule,
       status: schedule?.enabled ? ReportStatus.SCHEDULED : ReportStatus.DRAFT,
       updatedAt: new Date().toISOString(),
@@ -140,11 +146,13 @@ export async function updateReportSharing(
       throw new Error('Report not found');
     }
 
+    const report = existingReport as Report;
+
     // Check permissions
     await validateReportEditPermission(reportId);
 
     const updatedReport: Report = {
-      ...existingReport,
+      ...report,
       sharing,
       updatedAt: new Date().toISOString(),
     };
@@ -176,11 +184,13 @@ export async function updateReportFilters(
       throw new Error('Report not found');
     }
 
+    const report = existingReport as Report;
+
     // Check permissions
     await validateReportEditPermission(reportId);
 
     const updatedReport: Report = {
-      ...existingReport,
+      ...report,
       filters,
       updatedAt: new Date().toISOString(),
     };

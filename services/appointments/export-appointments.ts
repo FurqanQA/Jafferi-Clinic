@@ -4,7 +4,7 @@ import { getUserClinicId } from '../core/auth';
 import { objectsToCSV } from '../core/export-csv';
 import { logger } from '../shared/logger';
 import { validateExportAppointmentsPermission } from './appointment-permissions';
-import { AppointmentExportData, Appointment } from './appointment-types';
+import { AppointmentExportData, Appointment, CalendarAppointment } from './appointment-types';
 
 /**
  * Export appointments as CSV-ready data
@@ -68,22 +68,22 @@ export async function exportAppointments(params?: {
     }
 
     // Transform to export format
-    const exportData = (data || []).map((apt: any) => ({
-      appointment_number: apt.appointment_number,
-      patient_name: `${apt.patients.first_name} ${apt.patients.last_name}`,
-      doctor_name: `${apt.doctors.first_name} ${apt.doctors.last_name}`,
-      department: apt.departments?.name || '',
+    const exportData = (data || []).map((apt: CalendarAppointment) => ({
+      appointment_number: apt.appointment_number || '',
+      patient_name: apt.patients?.[0] ? `${apt.patients[0].first_name} ${apt.patients[0].last_name}` : 'Unknown',
+      doctor_name: apt.doctors?.[0] ? `${apt.doctors[0].first_name} ${apt.doctors[0].last_name}` : 'Unknown',
+      department: apt.departments?.[0]?.name || '',
       appointment_date: apt.appointment_date,
       start_time: apt.start_time,
       end_time: apt.end_time,
-      duration: apt.duration,
-      appointment_type: apt.appointment_type,
-      visit_type: apt.visit_type,
-      priority: apt.priority,
+      duration: apt.duration_minutes || 0,
+      appointment_type: apt.appointment_type || '',
+      visit_type: apt.visit_type || '',
+      priority: apt.priority || '',
       status: apt.status,
-      reason_for_visit: apt.reason_for_visit || '',
-      source: apt.source,
-      created_at: apt.created_at,
+      reason_for_visit: apt.reason || '',
+      source: apt.source || '',
+      created_at: apt.created_at || '',
     }));
 
     logger.info('Appointments exported successfully', { count: exportData.length });

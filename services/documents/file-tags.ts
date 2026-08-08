@@ -1,7 +1,9 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, AuthorizationError, DatabaseError, ValidationError } from '../core/errors';
 import { logger } from '../shared/logger';
 import { Document } from './document-types';
 import { validateDocumentEditPermission } from './document-permissions';
+import { getSupabaseClient } from '../core/client';
 
 // ============================================================================
 // File Tags Service
@@ -17,21 +19,28 @@ export async function addDocumentTags(
 ): Promise<Document> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentEditPermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     // Merge tags, avoiding duplicates
@@ -40,17 +49,25 @@ export async function addDocumentTags(
     const updatedTags = [...existingTags, ...newTags];
 
     if (updatedTags.length > 20) {
-      throw new Error('Maximum 20 tags allowed per document');
+      throw new ValidationError('Maximum 20 tags allowed per document');
     }
 
-    const updatedDocument: Document = {
-      ...document,
-      tags: updatedTags,
-      updatedAt: new Date().toISOString(),
-      updatedBy: user.id,
-    };
+    // Update document in database
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({
+        tags: updatedTags,
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+      })
+      .eq('id', documentId)
+      .select()
+      .single();
 
-    // Placeholder for database update
+    if (updateError) {
+      throw new DatabaseError('Failed to add tags to document', { error: updateError });
+    }
+
     logger.info('Tags added to document', { 
       documentId, 
       tagsAdded: newTags.length, 
@@ -59,7 +76,7 @@ export async function addDocumentTags(
       userId: user.id 
     });
 
-    return updatedDocument;
+    return updatedDocument as Document;
   } catch (error) {
     logger.error('Failed to add tags to document', { 
       error, 
@@ -80,34 +97,49 @@ export async function removeDocumentTags(
 ): Promise<Document> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentEditPermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     // Remove specified tags
-    const updatedTags = (document.tags || []).filter(tag => !tags.includes(tag));
+    const updatedTags = (document.tags || []).filter((tag: string) => !tags.includes(tag));
 
-    const updatedDocument: Document = {
-      ...document,
-      tags: updatedTags,
-      updatedAt: new Date().toISOString(),
-      updatedBy: user.id,
-    };
+    // Update document in database
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({
+        tags: updatedTags,
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+      })
+      .eq('id', documentId)
+      .select()
+      .single();
 
-    // Placeholder for database update
+    if (updateError) {
+      throw new DatabaseError('Failed to remove tags from document', { error: updateError });
+    }
+
     logger.info('Tags removed from document', { 
       documentId, 
       tagsRemoved: tags.length, 
@@ -116,7 +148,7 @@ export async function removeDocumentTags(
       userId: user.id 
     });
 
-    return updatedDocument;
+    return updatedDocument as Document;
   } catch (error) {
     logger.error('Failed to remove tags from document', { 
       error, 
@@ -137,45 +169,60 @@ export async function replaceDocumentTags(
 ): Promise<Document> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentEditPermission(documentId);
 
     if (tags.length > 20) {
-      throw new Error('Maximum 20 tags allowed per document');
+      throw new ValidationError('Maximum 20 tags allowed per document');
     }
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (fetchError || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
-    const updatedDocument: Document = {
-      ...document,
-      tags,
-      updatedAt: new Date().toISOString(),
-      updatedBy: user.id,
-    };
+    // Update document in database
+    const { data: updatedDocument, error: updateError } = await supabase
+      .from('documents')
+      .update({
+        tags,
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+      })
+      .eq('id', documentId)
+      .select()
+      .single();
 
-    // Placeholder for database update
-    logger.info('Document tags replaced', { 
+    if (updateError) {
+      throw new DatabaseError('Failed to replace tags on document', { error: updateError });
+    }
+
+    logger.info('Tags replaced on document', { 
       documentId, 
-      tagCount: tags.length, 
+      newTagCount: tags.length, 
       clinicId, 
       userId: user.id 
     });
 
-    return updatedDocument;
+    return updatedDocument as Document;
   } catch (error) {
-    logger.error('Failed to replace document tags', { 
+    logger.error('Failed to replace tags on document', { 
       error, 
       documentId, 
       clinicId, 
@@ -191,18 +238,20 @@ export async function replaceDocumentTags(
 export async function getDocumentTags(documentId: string): Promise<string[]> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error } = await supabase
+      .from('documents')
+      .select('tags')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
-    }
-
-    // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (error || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     logger.info('Document tags retrieved', { documentId, clinicId, userId: user.id });

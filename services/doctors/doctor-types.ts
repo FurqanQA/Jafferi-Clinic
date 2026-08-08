@@ -23,7 +23,7 @@ export type DoctorAvailability = 'available' | 'busy' | 'unavailable' | 'on_vaca
 export interface Doctor {
   id: string;
   clinic_id: string;
-  user_id?: string;
+  user_id: string;
   doctor_number: string;
   first_name: string;
   last_name: string;

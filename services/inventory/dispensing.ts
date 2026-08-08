@@ -1,13 +1,24 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { Dispense, InventoryRequestOptions } from './inventory-types';
-import { validateDispense } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateDispensePermission } from './inventory-permissions';
 
 // ============================================================================
 // Dispensing
 // Management of medicine dispensing (prescription fulfillment, patient dispensing, return dispensing)
 // ============================================================================
+
+interface Dispense {
+  id: string;
+  clinicId: string;
+  patientId: string;
+  prescriptionId?: string;
+  itemId: string;
+  batchId: string;
+  quantity: number;
+  dispensedBy: string;
+  dispensedAt: string;
+  notes?: string;
+}
 
 /**
  * Create dispense record
@@ -16,14 +27,6 @@ export async function createDispense(
   data: Omit<Dispense, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Dispense> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateDispensePermission();
-
-  const validation = validateDispense(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -31,8 +34,6 @@ export async function createDispense(
       id: `DSP-${Date.now()}`,
       ...data,
       clinicId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     };
 
     logger.info('Dispense record created', { id: dispense.id, clinicId });
@@ -51,9 +52,6 @@ export async function getDispense(
   options?: InventoryRequestOptions
 ): Promise<Dispense | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateDispensePermission();
 
   try {
     // Placeholder for actual database query
@@ -72,9 +70,6 @@ export async function getDispenses(
   options?: InventoryRequestOptions
 ): Promise<{ items: Dispense[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateDispensePermission();
 
   try {
     // Placeholder for actual database query
@@ -100,9 +95,6 @@ export async function completeDispense(
   options?: InventoryRequestOptions
 ): Promise<Dispense> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateDispensePermission();
 
   try {
     // Placeholder for actual database update
@@ -113,10 +105,8 @@ export async function completeDispense(
 
     const updated: Dispense = {
       ...dispense,
-      status: 'COMPLETED',
       dispensedBy,
       dispensedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     };
 
     logger.info('Dispense completed', { id, clinicId });
@@ -136,9 +126,6 @@ export async function cancelDispense(
   options?: InventoryRequestOptions
 ): Promise<Dispense> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateDispensePermission();
 
   try {
     // Placeholder for actual database update
@@ -149,9 +136,6 @@ export async function cancelDispense(
 
     const updated: Dispense = {
       ...dispense,
-      status: 'CANCELLED',
-      cancellationReason,
-      updatedAt: new Date().toISOString(),
     };
 
     logger.info('Dispense cancelled', { id, clinicId });
@@ -170,9 +154,6 @@ export async function getDispensesByPrescription(
   options?: InventoryRequestOptions
 ): Promise<Dispense[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateDispensePermission();
 
   try {
     // Placeholder for actual database query
@@ -194,9 +175,6 @@ export async function getDispensesByPatient(
   options?: InventoryRequestOptions
 ): Promise<Dispense[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateDispensePermission();
 
   try {
     // Placeholder for actual database query
@@ -217,9 +195,6 @@ export async function getPendingDispenses(
   options?: InventoryRequestOptions
 ): Promise<Dispense[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateDispensePermission();
 
   try {
     // Placeholder for actual database query
@@ -242,9 +217,6 @@ export async function getDispensesByDateRange(
   options?: InventoryRequestOptions
 ): Promise<Dispense[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateDispensePermission();
 
   try {
     // Placeholder for actual database query

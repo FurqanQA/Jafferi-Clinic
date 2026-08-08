@@ -167,7 +167,7 @@ async function analyzeBillingMetrics(
   dateRange: { start: string; end: string },
   options: AnalyticsRequestOptions
 ): Promise<any> {
-  const metrics = await calculateBillingMetrics(clinicId, dateRange);
+  const metrics = await calculateBillingMetrics(clinicId);
 
   if (options.groupBy === 'status') {
     return groupMetricsByKey(metrics, 'status');

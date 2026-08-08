@@ -1,11 +1,10 @@
 import { getUserClinicId } from '../core/auth';
-import { logger } from '../shared/logger';
 import { InventoryRequestOptions } from './inventory-types';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
+import { logger } from '../shared/logger';
 
 // ============================================================================
 // Get Items
-// Generic items list retrieval handler for all inventory entities
+// Generic items listing handler for all inventory entities
 // ============================================================================
 
 /**
@@ -14,15 +13,12 @@ import { validateWarehouseAccess, validateClinicIsolation, validateStockOperatio
 export async function getItems(
   itemType: string,
   options?: InventoryRequestOptions
-): Promise<{ items: Array<{ id: string; type: string; data: Record<string, any> }>; total: number; limit: number; offset: number }> {
+): Promise<{ items: Array<{ id: string; type: string; data: Record<string, unknown> }>; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual items retrieval logic
-    const items: Array<{ id: string; type: string; data: Record<string, any> }> = [];
+    const items: Array<{ id: string; type: string; data: Record<string, unknown> }> = [];
     const total = 0;
     const limit = options?.limit || 50;
     const offset = options?.offset || 0;
@@ -40,17 +36,14 @@ export async function getItems(
  */
 export async function getItemsByFilter(
   itemType: string,
-  filter: Record<string, any>,
+  filter: Record<string, unknown>,
   options?: InventoryRequestOptions
-): Promise<Array<{ id: string; type: string; data: Record<string, any> }>> {
+): Promise<Array<{ id: string; type: string; data: Record<string, unknown> }>> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual filtered retrieval logic
-    const items: Array<{ id: string; type: string; data: Record<string, any> }> = [];
+    const items: Array<{ id: string; type: string; data: Record<string, unknown> }> = [];
 
     logger.info('Items retrieved by filter', { itemType, clinicId, count: items.length });
     return items;

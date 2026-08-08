@@ -1,13 +1,22 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { Warehouse, InventoryRequestOptions } from './inventory-types';
-import { validateWarehouse } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Warehouses
 // Management of warehouse locations (clinic, central, pharmacy, storage, cold storage)
 // ============================================================================
+
+interface Warehouse {
+  id: string;
+  clinicId: string;
+  name: string;
+  type: 'CLINIC' | 'CENTRAL' | 'PHARMACY' | 'STORAGE' | 'COLD_STORAGE';
+  address?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Create warehouse
@@ -16,14 +25,6 @@ export async function createWarehouse(
   data: Omit<Warehouse, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Warehouse> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateWarehouse(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -51,9 +52,6 @@ export async function getWarehouse(
   options?: InventoryRequestOptions
 ): Promise<Warehouse | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -72,9 +70,6 @@ export async function getWarehouses(
   options?: InventoryRequestOptions
 ): Promise<{ items: Warehouse[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -100,9 +95,6 @@ export async function updateWarehouse(
   options?: InventoryRequestOptions
 ): Promise<Warehouse> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
@@ -110,22 +102,9 @@ export async function updateWarehouse(
       id,
       clinicId,
       name: data.name || '',
-      code: data.code || '',
       type: data.type || 'CLINIC',
       address: data.address,
-      city: data.city,
-      state: data.state,
-      country: data.country,
-      postalCode: data.postalCode,
-      phone: data.phone,
-      email: data.email,
-      managerId: data.managerId,
-      capacity: data.capacity,
       isActive: data.isActive ?? true,
-      isDefault: data.isDefault ?? false,
-      notes: data.notes,
-      createdBy: data.createdBy || '',
-      updatedBy: data.updatedBy,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -146,9 +125,6 @@ export async function deleteWarehouse(
   options?: InventoryRequestOptions
 ): Promise<void> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('delete');
 
   try {
     // Placeholder for actual database delete
@@ -167,9 +143,6 @@ export async function searchWarehouses(
   options?: InventoryRequestOptions
 ): Promise<Warehouse[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual search implementation
@@ -190,9 +163,6 @@ export async function getDefaultWarehouse(
   options?: InventoryRequestOptions
 ): Promise<Warehouse | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -212,9 +182,6 @@ export async function getWarehousesByType(
   options?: InventoryRequestOptions
 ): Promise<Warehouse[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query

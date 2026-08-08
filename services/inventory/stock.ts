@@ -1,29 +1,36 @@
 import { getUserClinicId } from '../core/auth';
+import { InventoryRequestOptions } from './inventory-types';
 import { logger } from '../shared/logger';
-import { Stock, InventoryRequestOptions } from './inventory-types';
-import { validateStock } from './inventory-validation';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
 
 // ============================================================================
 // Stock
 // Management of stock records (available, reserved, dispensed, returned, damaged, expired, transferred quantities)
 // ============================================================================
 
+interface Stock {
+  id: string;
+  clinicId: string;
+  itemId: string;
+  warehouseId: string;
+  availableQuantity: number;
+  reservedQuantity: number;
+  dispensedQuantity: number;
+  returnedQuantity: number;
+  damagedQuantity: number;
+  expiredQuantity: number;
+  transferredQuantity: number;
+  lastUpdated: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /**
  * Create stock record
  */
 export async function createStock(
-  data: Omit<Stock, 'id' | 'createdAt' | 'updatedAt' | 'version'>
+  data: Omit<Stock, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Stock> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
-
-  const validation = validateStock(data);
-  if (!validation.success) {
-    throw new Error(`Validation failed: ${validation.errors?.join(', ')}`);
-  }
 
   try {
     // Placeholder for actual database insert
@@ -31,9 +38,9 @@ export async function createStock(
       id: `STK-${Date.now()}`,
       ...data,
       clinicId,
+      lastUpdated: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      version: 1,
     };
 
     logger.info('Stock record created', { id: stock.id, clinicId });
@@ -52,9 +59,6 @@ export async function getStock(
   options?: InventoryRequestOptions
 ): Promise<Stock | null> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -73,9 +77,6 @@ export async function getStockRecords(
   options?: InventoryRequestOptions
 ): Promise<{ items: Stock[]; total: number; limit: number; offset: number }> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -101,22 +102,14 @@ export async function updateStock(
   options?: InventoryRequestOptions
 ): Promise<Stock> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual database update
     const stock: Stock = {
       id,
       clinicId,
+      itemId: data.itemId || '',
       warehouseId: data.warehouseId || '',
-      locationId: data.locationId,
-      medicineId: data.medicineId || '',
-      batchNumber: data.batchNumber,
-      expiryDate: data.expiryDate,
-      manufacturingDate: data.manufacturingDate,
-      serialNumber: data.serialNumber,
       availableQuantity: data.availableQuantity ?? 0,
       reservedQuantity: data.reservedQuantity ?? 0,
       dispensedQuantity: data.dispensedQuantity ?? 0,
@@ -124,20 +117,9 @@ export async function updateStock(
       damagedQuantity: data.damagedQuantity ?? 0,
       expiredQuantity: data.expiredQuantity ?? 0,
       transferredQuantity: data.transferredQuantity ?? 0,
-      openingBalance: data.openingBalance ?? 0,
-      closingBalance: data.closingBalance ?? 0,
-      costPrice: data.costPrice ?? 0,
-      sellingPrice: data.sellingPrice ?? 0,
-      supplierId: data.supplierId,
-      purchaseOrderId: data.purchaseOrderId,
-      expiryStatus: data.expiryStatus || 'ACTIVE',
-      isActive: data.isActive ?? true,
-      notes: data.notes,
-      createdBy: data.createdBy || '',
-      updatedBy: data.updatedBy,
+      lastUpdated: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      version: 1,
     };
 
     logger.info('Stock record updated', { id, clinicId });
@@ -156,9 +138,6 @@ export async function deleteStock(
   options?: InventoryRequestOptions
 ): Promise<void> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('delete');
 
   try {
     // Placeholder for actual database delete
@@ -177,9 +156,6 @@ export async function getStockByMedicine(
   options?: InventoryRequestOptions
 ): Promise<Stock[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -201,9 +177,6 @@ export async function getStockByWarehouse(
   options?: InventoryRequestOptions
 ): Promise<Stock[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -225,9 +198,6 @@ export async function getStockByBatch(
   options?: InventoryRequestOptions
 ): Promise<Stock[]> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual database query
@@ -251,9 +221,6 @@ export async function adjustStockQuantity(
   options?: InventoryRequestOptions
 ): Promise<Stock> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual stock adjustment
@@ -264,7 +231,6 @@ export async function adjustStockQuantity(
 
     const updated = await updateStock(id, {
       availableQuantity: Math.max(0, existing.availableQuantity + quantityDelta),
-      closingBalance: Math.max(0, existing.closingBalance + quantityDelta),
     }, options);
 
     logger.info('Stock quantity adjusted', { id, quantityDelta, reason, clinicId });

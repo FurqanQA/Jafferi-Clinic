@@ -1,9 +1,11 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, AuthorizationError, DatabaseError } from '../core/errors';
 import { logger } from '../shared/logger';
-import { Document, DocumentCategory, FileFormat } from './document-types';
+import { Document, DocumentCategory, DocumentStatus, FileFormat } from './document-types';
 import { createDocumentSchema, getMimeType } from './document-validation';
 import { uploadFile } from './file-upload';
 import { logDocumentAction } from './audit';
+import { getSupabaseClient } from '../core/client';
 
 // ============================================================================
 // Create Document Service
@@ -50,33 +52,17 @@ export async function createDocument(data: {
     // Get MIME type
     const mimeType = getMimeType(data.format);
 
-    // Create document record
-    const document: Document = {
-      id: uploadResult.documentId,
-      clinicId,
-      ownerId: user.id,
-      title: data.title,
-      description: data.description,
-      category: data.category,
-      format: data.format,
-      status: 'active' as any,
-      filePath: uploadResult.filePath,
-      fileName: data.fileName,
-      fileSize: data.file.length,
-      mimeType,
-      checksum: uploadResult.checksum,
-      tags: data.tags || [],
-      metadata: data.metadata || {},
-      version: uploadResult.version,
-      currentVersionId: uploadResult.documentId,
-      isEncrypted: false,
-      isPublic: false,
-      downloadCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      createdBy: user.id,
-      updatedBy: user.id,
-    };
+    // Fetch the created document from database
+    const supabase = getSupabaseClient();
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', uploadResult.document_id)
+      .single();
+
+    if (fetchError || !document) {
+      throw new DatabaseError('Failed to fetch created document');
+    }
 
     // Placeholder for database insertion
     await logDocumentAction(document.id, 'upload', {

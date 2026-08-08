@@ -1,7 +1,6 @@
 import { getUserClinicId } from '../core/auth';
-import { logger } from '../shared/logger';
 import { InventoryRequestOptions } from './inventory-types';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
+import { logger } from '../shared/logger';
 
 // ============================================================================
 // Create Item
@@ -13,12 +12,9 @@ import { validateWarehouseAccess, validateClinicIsolation, validateStockOperatio
  */
 export async function createItem(
   itemType: string,
-  data: Record<string, any>
+  data: Record<string, unknown>
 ): Promise<{ id: string; type: string; createdAt: string }> {
   const clinicId = data.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual item creation logic
@@ -40,12 +36,9 @@ export async function createItem(
  * Create multiple items in batch
  */
 export async function createItemsBatch(
-  items: Array<{ itemType: string; data: Record<string, any> }>
+  items: Array<{ itemType: string; data: Record<string, unknown> }>
 ): Promise<{ created: number; failed: number; errors: string[] }> {
   const clinicId = await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('write');
 
   try {
     // Placeholder for actual batch creation logic

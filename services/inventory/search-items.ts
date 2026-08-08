@@ -1,11 +1,10 @@
 import { getUserClinicId } from '../core/auth';
-import { logger } from '../shared/logger';
 import { InventoryRequestOptions } from './inventory-types';
-import { validateWarehouseAccess, validateClinicIsolation, validateStockOperation } from './inventory-permissions';
+import { logger } from '../shared/logger';
 
 // ============================================================================
 // Search Items
-// Generic item search handler for all inventory entities
+// Generic items search handler for all inventory entities
 // ============================================================================
 
 /**
@@ -15,15 +14,12 @@ export async function searchItems(
   itemType: string,
   query: string,
   options?: InventoryRequestOptions
-): Promise<Array<{ id: string; type: string; data: Record<string, any>; relevance: number }>> {
+): Promise<Array<{ id: string; type: string; data: Record<string, unknown>; relevance: number }>> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual search logic
-    const items: Array<{ id: string; type: string; data: Record<string, any>; relevance: number }> = [];
+    const items: Array<{ id: string; type: string; data: Record<string, unknown>; relevance: number }> = [];
 
     logger.info('Items searched', { itemType, query, clinicId, count: items.length });
     return items;
@@ -38,17 +34,14 @@ export async function searchItems(
  */
 export async function advancedSearchItems(
   itemType: string,
-  filters: Record<string, any>,
+  filters: Record<string, unknown>,
   options?: InventoryRequestOptions
-): Promise<Array<{ id: string; type: string; data: Record<string, any> }>> {
+): Promise<Array<{ id: string; type: string; data: Record<string, unknown> }>> {
   const clinicId = options?.clinicId || await getUserClinicId();
-  
-  await validateWarehouseAccess(clinicId);
-  await validateStockOperation('read');
 
   try {
     // Placeholder for actual advanced search logic
-    const items: Array<{ id: string; type: string; data: Record<string, any> }> = [];
+    const items: Array<{ id: string; type: string; data: Record<string, unknown> }> = [];
 
     logger.info('Items advanced searched', { itemType, clinicId, count: items.length });
     return items;

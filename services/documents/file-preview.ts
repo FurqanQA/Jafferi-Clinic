@@ -1,9 +1,11 @@
 import { getUserClinicId, getCurrentUser } from '../core/auth';
+import { NotFoundError, AuthorizationError } from '../core/errors';
 import { logger } from '../shared/logger';
-import { Document, FileFormat } from './document-types';
+import { Document, FileFormat, StorageBucket } from './document-types';
 import { validateDocumentViewPermission } from './document-permissions';
 import { generateSignedUrl } from './storage';
 import { updateDocumentAccessTracking } from './document-engine';
+import { getSupabaseClient } from '../core/client';
 
 // ============================================================================
 // File Preview Service
@@ -20,25 +22,32 @@ export async function getPreviewUrl(documentId: string): Promise<{
 }> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
     await validateDocumentViewPermission(documentId);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (error || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinicId) {
+      throw new AuthorizationError('Access denied');
     }
 
     // Generate signed URL for preview
-    const previewUrl = await generateSignedUrl(document.filePath, 3600, 'private' as any);
+    const previewUrl = await generateSignedUrl(document.file_path, 3600, StorageBucket.PRIVATE);
     const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
 
     // Update access tracking
@@ -53,7 +62,7 @@ export async function getPreviewUrl(documentId: string): Promise<{
     return {
       previewUrl,
       expiresAt,
-      mimeType: document.mimeType,
+      mimeType: document.mime_type,
     };
   } catch (error) {
     logger.error('Failed to generate preview URL', { 
@@ -84,48 +93,55 @@ export function supportsPreview(format: FileFormat): boolean {
 /**
  * Get thumbnail URL
  */
-export async function getThumbnailUrl(
-  documentId: string,
+export async function generateThumbnailUrl(
+  document_id: string,
   size: 'small' | 'medium' | 'large' = 'medium'
 ): Promise<string> {
   const user = await getCurrentUser();
-  const clinicId = await getUserClinicId();
+  const clinic_id = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
     // Check permissions
-    await validateDocumentViewPermission(documentId);
+    await validateDocumentViewPermission(document_id);
 
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', document_id)
+      .eq('clinic_id', clinic_id)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (error || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Verify clinic access for multi-tenancy
-    if (document.clinicId !== clinicId) {
-      throw new Error('Access denied');
+    if (document.clinic_id !== clinic_id) {
+      throw new AuthorizationError('Access denied');
     }
 
     // Placeholder for thumbnail URL generation
-    const thumbnailPath = `thumbnails/${documentId}_${size}.jpg`;
-    const thumbnailUrl = await generateSignedUrl(thumbnailPath, 3600, 'private' as any);
+    const thumbnail_path = `thumbnails/${document_id}_${size}.jpg`;
+    const thumbnail_url = await generateSignedUrl(thumbnail_path, 3600, StorageBucket.PRIVATE);
 
     logger.info('Thumbnail URL generated', { 
-      documentId, 
+      document_id, 
       size, 
-      clinicId, 
-      userId: user.id 
+      clinic_id, 
+      user_id: user.id 
     });
 
-    return thumbnailUrl;
+    return thumbnail_url;
   } catch (error) {
     logger.error('Failed to generate thumbnail URL', { 
       error, 
-      documentId, 
+      document_id, 
       size, 
-      clinicId, 
-      userId: user.id 
+      clinic_id, 
+      user_id: user.id 
     });
     throw error;
   }
@@ -138,13 +154,20 @@ export async function getThumbnailUrl(
 export async function generatePreview(documentId: string): Promise<void> {
   const user = await getCurrentUser();
   const clinicId = await getUserClinicId();
+  const supabase = getSupabaseClient();
 
   try {
-    // Placeholder for fetching document
-    const document: Document | null = null;
+    // Fetch document
+    const { data: document, error } = await supabase
+      .from('documents')
+      .select('format')
+      .eq('id', documentId)
+      .eq('clinic_id', clinicId)
+      .is('deleted_at', null)
+      .single();
 
-    if (!document) {
-      throw new Error('Document not found');
+    if (error || !document) {
+      throw new NotFoundError('Document not found');
     }
 
     // Placeholder for preview generation
